@@ -7,35 +7,17 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'rust-hour'",
-            "cargo": {
-                "args": [
-                    "build",
-                    "--bin=rust-hour",
-                    "--package=rust-hour"
-                ],
-                "filter": {
-                    "name": "rust-hour",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in executable 'rust-hour'",
+            "name": "Debug unit tests in library 'rust-hour'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=rust-hour",
+                    "--lib",
                     "--package=rust-hour"
                 ],
                 "filter": {
                     "name": "rust-hour",
-                    "kind": "bin"
+                    "kind": "lib"
                 }
             },
             "args": [],
