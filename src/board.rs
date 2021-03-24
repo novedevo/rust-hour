@@ -1,4 +1,6 @@
+use std::cmp::Ordering;
 use std::collections::HashSet;
+use std::hash::{Hash, Hasher};
 
 // #[derive(PartialEq, Eq, Hash, Clone)]
 // enum Size {
@@ -6,17 +8,23 @@ use std::collections::HashSet;
 //     Truck = 3,
 // }
 
-#[derive(PartialEq, Eq, Hash, Clone, Debug)]
+#[derive(PartialEq, Eq, Hash, Clone, Debug, Ord)]
 struct Car {
     vertical: bool,
-    length: usize,
+    length: i32,
     colour: char,
-    x: usize,
-    y: usize,
+    x: i32,
+    y: i32,
+}
+
+impl PartialOrd for Car {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.colour.cmp(&other.colour))
+    }
 }
 
 impl Car {
-    pub fn new(vertical: bool, length: usize, colour: char, x: usize, y: usize) -> Self {
+    pub fn new(vertical: bool, length: i32, colour: char, x: i32, y: i32) -> Self {
         Car {
             vertical,
             length,
@@ -30,10 +38,29 @@ impl Car {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Board {
     cars: HashSet<Car>,
     board_chars: [[char; 6]; 6],
+    heuristic: i32,
+}
+
+impl PartialOrd for Board {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.heuristic.cmp(&other.heuristic))
+    }
+}
+
+impl Ord for Board {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.heuristic.cmp(&other.heuristic)
+    }
+}
+
+impl Hash for Board {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.ordered_cars().hash(state);
+    }
 }
 
 impl Board {
@@ -42,7 +69,7 @@ impl Board {
             Ok(a) => {
                 println!("{}", board_path);
                 a
-            },
+            }
             _ => panic!("{}", board_path),
         };
         let mut cars: HashSet<Car> = HashSet::new();
@@ -57,8 +84,8 @@ impl Board {
                         Self::is_vertical(chars, x, y),
                         Self::get_length(chars, x, y),
                         tile,
-                        x,
-                        y,
+                        x as i32,
+                        y as i32,
                     ));
                 }
             }
@@ -66,52 +93,118 @@ impl Board {
         Board {
             cars,
             board_chars: chars,
+            heuristic: 0,
         }
     }
+
     fn from_cars(cars: HashSet<Car>) -> Self {
         Board {
             board_chars: Self::gen_chars(&cars),
             cars,
+            heuristic: 0,
         }
     }
+
     fn gen_chars(cars: &HashSet<Car>) -> [[char; 6]; 6] {
         let mut retval = [['.'; 6]; 6];
 
         for car in cars {
             if car.vertical {
-                for i in 0..car.length {
-                    retval[car.y + i][car.x] = car.colour;
+                for i in 0..car.length + 1 {
+                    retval[(car.y + i) as usize][car.x as usize] = car.colour;
                 }
             } else {
-                for i in 0..car.length {
-                    retval[car.y][car.x + i] = car.colour;
+                for i in 0..car.length + 1 {
+                    retval[car.y as usize][(car.x + i) as usize] = car.colour;
                 }
             }
         }
 
         retval
     }
+
     fn is_vertical(board_string: [[char; 6]; 6], x: usize, y: usize) -> bool {
         y < 5 && board_string[y][x] == board_string[y + 1][x]
     }
-    fn get_length(board_string: [[char; 6]; 6], x: usize, y: usize) -> usize {
+
+    fn get_length(board_string: [[char; 6]; 6], x: usize, y: usize) -> i32 {
         let colour = board_string[y][x];
         if Self::is_vertical(board_string, x, y) {
             if y < 4 && board_string[y + 2][x] == colour {
-                3
-            } else {
                 2
+            } else {
+                1
             }
         } else {
             if x < 4 && board_string[y][x + 2] == colour {
-                3
-            } else {
                 2
+            } else {
+                1
             }
         }
     }
+
+    fn ordered_cars(&self) -> Vec<Car> {
+        let cars = self.cars.clone();
+        let mut retval = cars.into_iter().collect::<Vec<Car>>();
+        retval.sort();
+        retval
+    }
+
+    pub fn get_moves(&self) -> Vec<Self> {
+        let mut moves:Vec<Self> = Vec::<Self>::with_capacity(10);
+        
+        for car in &self.cars {
+            if !car.vertical {
+                for i in 1i32..4 {
+                    if car.x - i >= 0 && self.board_chars[car.y as usize][(car.x - i) as usize] == '.' {
+                        Self::add_to_moves(car.x-i, car.y, car, &self.cars, &mut moves)
+                    } else {
+                        break;
+                    }
+                }
+                for i in 1i32..4 {
+                    if car.x + car.length + i < 6 && self.board_chars[car.y as usize][(car.x + car.length + i) as usize] == '.' {
+                        Self::add_to_moves(car.x+i, car.y, car, &self.cars, &mut moves)
+                    } else {
+                        break;
+                    }
+                }
+            } else {
+                for i in 1i32..4 {
+                    if car.y - i >= 0 && self.board_chars[(car.y - i) as usize][car.x as usize] == '.' {
+                        Self::add_to_moves(car.x, car.y-i, car, &self.cars, &mut moves)
+                    } else {
+                        break;
+                    }
+                }
+                for i in 1i32..4 {
+                    if car.y + car.length + i < 6 && self.board_chars[(car.y + car.length + i) as usize][car.x as usize] == '.' {
+                        Self::add_to_moves(car.x, car.y+i, car, &self.cars, &mut moves)
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+        
+        moves
+    }
     
-    pub fn is_victorious(&self) -> bool {
+    fn add_to_moves(x:i32, y:i32, car:&Car, cars:&HashSet<Car>, moves:&mut Vec<Board>) {
+        let new_car = Car::new(car.vertical, car.length, car.colour, x, y);
+        let mut new_cars = HashSet::<Car>::with_capacity(cars.capacity());
+        for old_car in cars {
+            if old_car.colour == car.colour {
+                new_cars.insert(new_car.clone());
+            } else {
+                new_cars.insert(old_car.clone());
+            }
+        }
+        moves.push(Board::from_cars(new_cars));
+    }
+    
+    pub fn is_solved(&self) -> bool {
         for car in &self.cars {
             if car.is_victorious() {
                 return true;

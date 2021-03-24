@@ -1,8 +1,12 @@
 mod board;
-use std::{env, fs};
+pub mod solver;
+
 
 #[cfg(test)]
 mod tests {
+    use super::board::Board;
+    use super::solver;
+    
     #[test]
     fn main() {
         solo_test();
@@ -10,15 +14,15 @@ mod tests {
     }
 
     fn solo_test() {
-        let a = crate::board::Board::from_str("puzzles/A00.txt");
+        let a = Board::from_str("puzzles/A00.txt");
         println!("{:#?}", a)
     }
 
     fn multi_test() {
-        for entry in crate::fs::read_dir("puzzles").unwrap() {
+        for entry in std::fs::read_dir("puzzles").unwrap() {
             let entry = entry.unwrap();
-            let a = crate::board::Board::from_str(entry.path().to_str().unwrap());
-            println!("{:?}", a)
+            let a = Board::from_str(entry.path().to_str().unwrap());
+            assert!(solver::solve(a));
         }
     }
 }
