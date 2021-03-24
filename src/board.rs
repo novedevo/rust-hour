@@ -104,6 +104,17 @@ impl Board {
             heuristic: 0,
         }
     }
+    
+    pub fn to_str(&self) -> Vec<char>{
+        let mut acc = vec![];
+        for line in self.board_chars.iter() {
+            for c in line {
+                acc.push(*c);
+            }
+            acc.push('\n')
+        }
+        acc
+    }
 
     fn gen_chars(cars: &HashSet<Car>) -> [[char; 6]; 6] {
         let mut retval = [['.'; 6]; 6];

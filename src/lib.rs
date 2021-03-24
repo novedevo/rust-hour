@@ -5,7 +5,7 @@ pub mod solver;
 mod tests {
     use super::board::Board;
     use super::solver;
-    use std::thread;
+    use std::{fs::File, io::Write, path::Path, thread};
 
     #[test]
     fn main() {
@@ -24,7 +24,15 @@ mod tests {
             let new_thread = thread::spawn(|| {
                 let entry = entry.unwrap();
                 let a = Board::from_str(entry.path().to_str().unwrap());
-                assert!(solver::solve(a));
+                
+                let outfile_str = String::from("solutions/") + entry.file_name().to_str().unwrap();
+                
+                let out_path = Path::new(&outfile_str);
+                let mut out_file = File::create(&out_path).unwrap();
+                
+                
+                
+                out_file.write_all(solver::solve(a).to_str().iter().collect::<String>().as_bytes()).unwrap();
             });
             threads.push(new_thread);
         }
