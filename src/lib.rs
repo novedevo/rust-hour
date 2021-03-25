@@ -9,7 +9,6 @@ mod tests {
 
     #[test]
     fn main() {
-        // solo_test();
         multi_test();
     }
 
@@ -32,7 +31,7 @@ mod tests {
                 
                 let solution = solver::solve(a);
                 
-                out_file.write_all(solution.0.to_str().iter().collect::<String>().as_bytes()).unwrap();
+                out_file.write(solution.0.to_str().iter().collect::<String>().as_bytes()).unwrap();
                 return solution.1
             });
             threads.push(new_thread);

@@ -8,7 +8,7 @@ use std::hash::{Hash, Hasher};
 //     Truck = 3,
 // }
 
-#[derive(PartialEq, Eq, Hash, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug)]
 struct Car {
     vertical: bool,
     length: i32,
@@ -40,7 +40,7 @@ impl Car {
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Board {
-    cars: HashSet<Car>,
+    cars: Vec<Car>,
     board_chars: [[char; 6]; 6],
     pub visited: bool
 }
@@ -72,7 +72,7 @@ impl Board {
             }
             _ => panic!("{}", board_path),
         };
-        let mut cars: HashSet<Car> = HashSet::new();
+        let mut cars: Vec<Car> = Vec::new();
         let mut colours: HashSet<char> = HashSet::new();
         colours.insert('.');
         let chars = str_to_chars(&board_string);
@@ -80,7 +80,7 @@ impl Board {
             for (x, tile) in line.chars().enumerate() {
                 if !colours.contains(&tile) {
                     colours.insert(tile);
-                    cars.insert(Car::new(
+                    cars.push(Car::new(
                         Self::is_vertical(chars, x, y),
                         Self::get_length(chars, x, y),
                         tile,
@@ -97,7 +97,7 @@ impl Board {
         }
     }
 
-    fn from_cars(cars: HashSet<Car>) -> Self {
+    fn from_cars(cars: Vec<Car>) -> Self {
         Board {
             board_chars: Self::gen_chars(&cars),
             cars,
@@ -116,7 +116,7 @@ impl Board {
         acc
     }
 
-    fn gen_chars(cars: &HashSet<Car>) -> [[char; 6]; 6] {
+    fn gen_chars(cars: &[Car]) -> [[char; 6]; 6] {
         let mut retval = [['.'; 6]; 6];
 
         for car in cars {
@@ -167,7 +167,7 @@ impl Board {
 
         for car in &self.cars {
             if !car.vertical {
-                for i in 1i32..4 {
+                for i in 1..5 {
                     if car.x - i >= 0
                         && self.board_chars[car.y as usize][(car.x - i) as usize] == '.'
                     {
@@ -176,7 +176,7 @@ impl Board {
                         break;
                     }
                 }
-                for i in 1i32..4 {
+                for i in 1..5 {
                     if car.x + car.length + i < 6
                         && self.board_chars[car.y as usize][(car.x + car.length + i) as usize]
                             == '.'
@@ -187,7 +187,7 @@ impl Board {
                     }
                 }
             } else {
-                for i in 1i32..4 {
+                for i in 1..5 {
                     if car.y - i >= 0
                         && self.board_chars[(car.y - i) as usize][car.x as usize] == '.'
                     {
@@ -196,7 +196,7 @@ impl Board {
                         break;
                     }
                 }
-                for i in 1i32..4 {
+                for i in 1..5 {
                     if car.y + car.length + i < 6
                         && self.board_chars[(car.y + car.length + i) as usize][car.x as usize]
                             == '.'
@@ -212,14 +212,14 @@ impl Board {
         moves
     }
 
-    fn add_to_moves(x: i32, y: i32, car: &Car, cars: &HashSet<Car>, moves: &mut Vec<Board>) {
+    fn add_to_moves(x: i32, y: i32, car: &Car, cars: &[Car], moves: &mut Vec<Board>) {
         let new_car = Car::new(car.vertical, car.length, car.colour, x, y);
-        let mut new_cars = HashSet::<Car>::with_capacity(cars.capacity());
+        let mut new_cars = Vec::new();
         for old_car in cars {
             if old_car.colour == car.colour {
-                new_cars.insert(new_car.clone());
+                new_cars.push(new_car.clone());
             } else {
-                new_cars.insert(old_car.clone());
+                new_cars.push(old_car.clone());
             }
         }
         moves.push(Board::from_cars(new_cars));
