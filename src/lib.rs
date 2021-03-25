@@ -9,15 +9,17 @@ mod tests {
 
     #[test]
     fn main() {
-        multi_test();
+        _multi_test();
+        // _solo_test();
     }
 
     fn _solo_test() {
         let a = Board::from_str("puzzles/A00.txt");
+        let a = solver::solve(a).0;
         println!("{:#?}", a)
     }
 
-    fn multi_test() {
+    fn _multi_test() {
         let mut threads = Vec::with_capacity(40);
         for entry in std::fs::read_dir("puzzles").unwrap() {
             let new_thread = thread::spawn(|| {
