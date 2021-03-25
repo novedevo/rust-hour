@@ -1,4 +1,4 @@
-use std::cmp::Ordering;
+// use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
 
@@ -8,7 +8,7 @@ use std::hash::{Hash, Hasher};
 //     Truck = 3,
 // }
 
-#[derive(PartialEq, Eq, Hash, Clone, Debug, Ord)]
+#[derive(PartialEq, Eq, Hash, Clone, Debug)]
 struct Car {
     vertical: bool,
     length: i32,
@@ -17,11 +17,11 @@ struct Car {
     y: i32,
 }
 
-impl PartialOrd for Car {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.colour.cmp(&other.colour))
-    }
-}
+// impl PartialOrd for Car {
+//     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+//         Some(self.colour.cmp(&other.colour))
+//     }
+// }
 
 impl Car {
     pub fn new(vertical: bool, length: i32, colour: char, x: i32, y: i32) -> Self {
@@ -45,21 +45,21 @@ pub struct Board {
     heuristic: i32,
 }
 
-impl PartialOrd for Board {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.heuristic.cmp(&other.heuristic))
-    }
-}
+// impl PartialOrd for Board {
+//     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+//         Some(self.heuristic.cmp(&other.heuristic))
+//     }
+// }
 
-impl Ord for Board {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.heuristic.cmp(&other.heuristic)
-    }
-}
+// impl Ord for Board {
+//     fn cmp(&self, other: &Self) -> Ordering {
+//         self.heuristic.cmp(&other.heuristic)
+//     }
+// }
 
 impl Hash for Board {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.ordered_cars().hash(state);
+        self.board_chars.hash(state);
     }
 }
 
@@ -104,8 +104,8 @@ impl Board {
             heuristic: 0,
         }
     }
-    
-    pub fn to_str(&self) -> Vec<char>{
+
+    pub fn to_str(&self) -> Vec<char> {
         let mut acc = vec![];
         for line in self.board_chars.iter() {
             for c in line {
@@ -155,54 +155,64 @@ impl Board {
         }
     }
 
-    fn ordered_cars(&self) -> Vec<Car> {
-        let cars = self.cars.clone();
-        let mut retval = cars.into_iter().collect::<Vec<Car>>();
-        retval.sort();
-        retval
-    }
+    // fn ordered_cars(&self) -> Vec<Car> {
+    //     let cars = self.cars.clone();
+    //     let mut retval = cars.into_iter().collect::<Vec<Car>>();
+    //     retval.sort();
+    //     retval
+    // }
 
     pub fn get_moves(&self) -> Vec<Self> {
-        let mut moves:Vec<Self> = Vec::<Self>::with_capacity(10);
-        
+        let mut moves: Vec<Self> = Vec::<Self>::with_capacity(10);
+
         for car in &self.cars {
             if !car.vertical {
                 for i in 1i32..4 {
-                    if car.x - i >= 0 && self.board_chars[car.y as usize][(car.x - i) as usize] == '.' {
-                        Self::add_to_moves(car.x-i, car.y, car, &self.cars, &mut moves)
+                    if car.x - i >= 0
+                        && self.board_chars[car.y as usize][(car.x - i) as usize] == '.'
+                    {
+                        Self::add_to_moves(car.x - i, car.y, car, &self.cars, &mut moves)
                     } else {
                         break;
                     }
                 }
                 for i in 1i32..4 {
-                    if car.x + car.length + i < 6 && self.board_chars[car.y as usize][(car.x + car.length + i) as usize] == '.' {
-                        Self::add_to_moves(car.x+i, car.y, car, &self.cars, &mut moves)
+                    if car.x + car.length + i < 6
+                        && self.board_chars[car.y as usize][(car.x + car.length + i) as usize]
+                            == '.'
+                    {
+                        Self::add_to_moves(car.x + i, car.y, car, &self.cars, &mut moves)
                     } else {
                         break;
                     }
                 }
             } else {
                 for i in 1i32..4 {
-                    if car.y - i >= 0 && self.board_chars[(car.y - i) as usize][car.x as usize] == '.' {
-                        Self::add_to_moves(car.x, car.y-i, car, &self.cars, &mut moves)
+                    if car.y - i >= 0
+                        && self.board_chars[(car.y - i) as usize][car.x as usize] == '.'
+                    {
+                        Self::add_to_moves(car.x, car.y - i, car, &self.cars, &mut moves)
                     } else {
                         break;
                     }
                 }
                 for i in 1i32..4 {
-                    if car.y + car.length + i < 6 && self.board_chars[(car.y + car.length + i) as usize][car.x as usize] == '.' {
-                        Self::add_to_moves(car.x, car.y+i, car, &self.cars, &mut moves)
+                    if car.y + car.length + i < 6
+                        && self.board_chars[(car.y + car.length + i) as usize][car.x as usize]
+                            == '.'
+                    {
+                        Self::add_to_moves(car.x, car.y + i, car, &self.cars, &mut moves)
                     } else {
                         break;
                     }
                 }
             }
         }
-        
+
         moves
     }
-    
-    fn add_to_moves(x:i32, y:i32, car:&Car, cars:&HashSet<Car>, moves:&mut Vec<Board>) {
+
+    fn add_to_moves(x: i32, y: i32, car: &Car, cars: &HashSet<Car>, moves: &mut Vec<Board>) {
         let new_car = Car::new(car.vertical, car.length, car.colour, x, y);
         let mut new_cars = HashSet::<Car>::with_capacity(cars.capacity());
         for old_car in cars {
@@ -214,7 +224,7 @@ impl Board {
         }
         moves.push(Board::from_cars(new_cars));
     }
-    
+
     pub fn is_solved(&self) -> bool {
         for car in &self.cars {
             if car.is_victorious() {
