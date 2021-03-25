@@ -1,26 +1,26 @@
-use std::collections::{HashSet};
+use std::collections::{HashSet, VecDeque};
 
 use crate::board::Board;
 
-pub fn solve(board: Board) -> Board {
-    bfs(board)
+pub fn solve(board: Board) -> (Board, usize) {
+    dfs(board)
 }
 
-fn bfs(board: Board) -> Board {
-    let mut visited: HashSet<Board> = HashSet::<Board>::new();
+fn dfs(board: Board) -> (Board, usize) {
+    let mut visited: HashSet<Board> = HashSet::new();
     visited.insert(board.clone());
 
-    let mut queue: Vec<Board> = Vec::new();
-    queue.push(board);
+    let mut stack: VecDeque<Board> = VecDeque::new();
+    stack.push_back(board);
 
-    while !queue.is_empty() {
-        let board = queue.pop().unwrap();
+    while let Some(board) = stack.pop_back() {
         for new_board in board.get_moves() {
             if new_board.is_solved() {
-                return new_board;
+                // eprintln!("{}", visited.len());
+                return (new_board, visited.len());
             } else if !visited.contains(&new_board) {
                 visited.insert(new_board.clone());
-                queue.push(new_board);
+                stack.push_back(new_board);
             }
         }
     }

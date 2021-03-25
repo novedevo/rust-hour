@@ -42,7 +42,7 @@ impl Car {
 pub struct Board {
     cars: HashSet<Car>,
     board_chars: [[char; 6]; 6],
-    heuristic: i32,
+    pub visited: bool
 }
 
 // impl PartialOrd for Board {
@@ -67,7 +67,7 @@ impl Board {
     pub fn from_str(board_path: &str) -> Self {
         let board_string = match std::fs::read_to_string(board_path) {
             Ok(a) => {
-                println!("{}", board_path);
+                // println!("{}", board_path);
                 a
             }
             _ => panic!("{}", board_path),
@@ -93,7 +93,7 @@ impl Board {
         Board {
             cars,
             board_chars: chars,
-            heuristic: 0,
+            visited: false,
         }
     }
 
@@ -101,7 +101,7 @@ impl Board {
         Board {
             board_chars: Self::gen_chars(&cars),
             cars,
-            heuristic: 0,
+            visited: false,
         }
     }
 

@@ -9,11 +9,11 @@ mod tests {
 
     #[test]
     fn main() {
-        solo_test();
+        // solo_test();
         multi_test();
     }
 
-    fn solo_test() {
+    fn _solo_test() {
         let a = Board::from_str("puzzles/A00.txt");
         println!("{:#?}", a)
     }
@@ -30,14 +30,17 @@ mod tests {
                 let out_path = Path::new(&outfile_str);
                 let mut out_file = File::create(&out_path).unwrap();
                 
+                let solution = solver::solve(a);
                 
-                
-                out_file.write_all(solver::solve(a).to_str().iter().collect::<String>().as_bytes()).unwrap();
+                out_file.write_all(solution.0.to_str().iter().collect::<String>().as_bytes()).unwrap();
+                return solution.1
             });
             threads.push(new_thread);
         }
+        let mut total_iter = 0;
         for handle in threads {
-            handle.join().unwrap();
+            total_iter += handle.join().unwrap();
         }
+        println!("{}", total_iter);
     }
 }
