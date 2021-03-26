@@ -231,27 +231,15 @@ impl Board {
 }
 
 fn str_to_chars(board_string: &str) -> [[char; 6]; 6] {
-    // let characters: Vec<Vec<char>>;
     let mut char_array = [['0'; 6]; 6];
     let mut seperated_board = board_string.lines();
-
-    // use std::convert::TryInto;
 
     for y in 0..6 {
         let mut line: Vec<char> = seperated_board.next().unwrap().chars().collect();
         for x in 0..6 {
             char_array[y][5 - x] = line.pop().unwrap();
         }
-        // char_array[y] = line.try_into().unwrap()
     }
-    // use std::convert::TryInto;
-    // println!("{:#?}", char_array);
-    // for (y, newline) in characters.enumerate() {
-    //     char_array[y] = match newline.try_into() {
-    //         Ok(arr) => arr,
-    //         Err(_) => panic!("array conversion"),
-    //     }
-    // }
 
     char_array
 }
