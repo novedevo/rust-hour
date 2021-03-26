@@ -1,13 +1,5 @@
-// use std::cmp::Ordering;
-// use std::collections::HashSet;
 use ahash::AHashSet;
 use std::hash::{Hash, Hasher};
-
-// #[derive(PartialEq, Eq, Hash, Clone)]
-// enum Size {
-//     Car = 2,
-//     Truck = 3,
-// }
 
 #[derive(PartialEq, Eq, Clone, Debug, Copy)]
 struct Car {
@@ -17,12 +9,6 @@ struct Car {
     x: i32,
     y: i32,
 }
-
-// impl PartialOrd for Car {
-//     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-//         Some(self.colour.cmp(&other.colour))
-//     }
-// }
 
 impl Car {
     pub fn new(vertical: bool, length: i32, colour: char, x: i32, y: i32) -> Self {
@@ -50,18 +36,6 @@ impl PartialEq for Board {
         self.board_chars == other.board_chars
     }
 }
-
-// impl PartialOrd for Board {
-//     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-//         Some(self.heuristic.cmp(&other.heuristic))
-//     }
-// }
-
-// impl Ord for Board {
-//     fn cmp(&self, other: &Self) -> Ordering {
-//         self.heuristic.cmp(&other.heuristic)
-//     }
-// }
 
 impl Hash for Board {
     fn hash<H: Hasher>(&self, state: &mut H) {
