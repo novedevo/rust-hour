@@ -1,6 +1,7 @@
 // use std::cmp::Ordering;
-use std::collections::HashSet;
+// use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
+use ahash::AHashSet;
 
 // #[derive(PartialEq, Eq, Hash, Clone)]
 // enum Size {
@@ -8,7 +9,7 @@ use std::hash::{Hash, Hasher};
 //     Truck = 3,
 // }
 
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, Copy)]
 struct Car {
     vertical: bool,
     length: i32,
@@ -38,11 +39,16 @@ impl Car {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, Eq, Clone)]
 pub struct Board {
     cars: Vec<Car>,
     board_chars: [[char; 6]; 6],
-    pub visited: bool
+}
+
+impl PartialEq for Board {
+    fn eq(&self, other: &Self) -> bool {
+        self.board_chars == other.board_chars
+    }
 }
 
 // impl PartialOrd for Board {
@@ -59,9 +65,10 @@ pub struct Board {
 
 impl Hash for Board {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.board_chars.hash(state);
+        self.board_chars.hash(state)
     }
 }
+
 
 impl Board {
     pub fn from_str(board_path: &str) -> Self {
@@ -73,7 +80,7 @@ impl Board {
             _ => panic!("{}", board_path),
         };
         let mut cars: Vec<Car> = Vec::new();
-        let mut colours: HashSet<char> = HashSet::new();
+        let mut colours: AHashSet<char> = AHashSet::new();
         colours.insert('.');
         let chars = str_to_chars(&board_string);
         for (y, line) in board_string.lines().enumerate() {
@@ -93,7 +100,6 @@ impl Board {
         Board {
             cars,
             board_chars: chars,
-            visited: false,
         }
     }
 
@@ -101,7 +107,6 @@ impl Board {
         Board {
             board_chars: Self::gen_chars(&cars),
             cars,
-            visited: false,
         }
     }
 
@@ -163,7 +168,7 @@ impl Board {
     // }
 
     pub fn get_moves(&self) -> Vec<Self> {
-        let mut moves: Vec<Self> = Vec::<Self>::with_capacity(10);
+        let mut moves = vec![];
 
         for car in &self.cars {
             if !car.vertical {
@@ -171,7 +176,7 @@ impl Board {
                     if car.x - i >= 0
                         && self.board_chars[car.y as usize][(car.x - i) as usize] == '.'
                     {
-                        Self::add_to_moves(car.x - i, car.y, car, &self.cars, &mut moves)
+                        moves.push(Self::add_to_moves(car.x - i, car.y, car, &self.cars))
                     } else {
                         break;
                     }
@@ -181,7 +186,7 @@ impl Board {
                         && self.board_chars[car.y as usize][(car.x + car.length + i) as usize]
                             == '.'
                     {
-                        Self::add_to_moves(car.x + i, car.y, car, &self.cars, &mut moves)
+                        moves.push(Self::add_to_moves(car.x + i, car.y, car, &self.cars))
                     } else {
                         break;
                     }
@@ -191,7 +196,7 @@ impl Board {
                     if car.y - i >= 0
                         && self.board_chars[(car.y - i) as usize][car.x as usize] == '.'
                     {
-                        Self::add_to_moves(car.x, car.y - i, car, &self.cars, &mut moves)
+                        moves.push(Self::add_to_moves(car.x, car.y - i, car, &self.cars))
                     } else {
                         break;
                     }
@@ -201,7 +206,7 @@ impl Board {
                         && self.board_chars[(car.y + car.length + i) as usize][car.x as usize]
                             == '.'
                     {
-                        Self::add_to_moves(car.x, car.y + i, car, &self.cars, &mut moves)
+                        moves.push(Self::add_to_moves(car.x, car.y + i, car, &self.cars))
                     } else {
                         break;
                     }
@@ -212,17 +217,33 @@ impl Board {
         moves
     }
 
-    fn add_to_moves(x: i32, y: i32, car: &Car, cars: &[Car], moves: &mut Vec<Board>) {
+    fn add_to_moves(x: i32, y: i32, car: &Car, cars: &[Car]) -> Board {
         let new_car = Car::new(car.vertical, car.length, car.colour, x, y);
-        let mut new_cars = Vec::new();
-        for old_car in cars {
-            if old_car.colour == car.colour {
-                new_cars.push(new_car.clone());
-            } else {
-                new_cars.push(old_car.clone());
-            }
-        }
-        moves.push(Board::from_cars(new_cars));
+
+        // let new_cars = cars
+        //     .into_iter()
+        //     .map(|old_car| {
+        //         if old_car.colour == car.colour {
+        //             car
+        //         } else {
+        //             *old_car
+        //         }
+        //     })
+        //     .collect();
+
+        // cars.
+        
+        Board::from_cars(
+            cars.into_iter()
+                .map(|old_car| {
+                    if old_car.colour == car.colour {
+                        new_car
+                    } else {
+                        *old_car
+                    }
+                })
+                .collect(),
+        )
     }
 
     pub fn is_solved(&self) -> bool {
@@ -245,7 +266,7 @@ fn str_to_chars(board_string: &str) -> [[char; 6]; 6] {
     for y in 0..6 {
         let mut line: Vec<char> = seperated_board.next().unwrap().chars().collect();
         for x in 0..6 {
-            char_array[y][5-x] = line.pop().unwrap();
+            char_array[y][5 - x] = line.pop().unwrap();
         }
         // char_array[y] = line.try_into().unwrap()
     }

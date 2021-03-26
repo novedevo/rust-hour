@@ -15,8 +15,8 @@ mod tests {
 
     fn _solo_test() {
         let a = Board::from_str("puzzles/A00.txt");
-        let a = solver::solve(a).0;
-        println!("{:#?}", a)
+        let _a = solver::solve(a).0;
+        // println!("{:#?}", a)
     }
 
     fn _multi_test() {
