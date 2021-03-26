@@ -1,7 +1,7 @@
 // use std::cmp::Ordering;
 // use std::collections::HashSet;
-use std::hash::{Hash, Hasher};
 use ahash::AHashSet;
+use std::hash::{Hash, Hasher};
 
 // #[derive(PartialEq, Eq, Hash, Clone)]
 // enum Size {
@@ -69,16 +69,9 @@ impl Hash for Board {
     }
 }
 
-
 impl Board {
     pub fn from_str(board_path: &str) -> Self {
-        let board_string = match std::fs::read_to_string(board_path) {
-            Ok(a) => {
-                // println!("{}", board_path);
-                a
-            }
-            _ => panic!("{}", board_path),
-        };
+        let board_string = std::fs::read_to_string(board_path).unwrap();
         let mut cars: Vec<Car> = Vec::new();
         let mut colours: AHashSet<char> = AHashSet::new();
         colours.insert('.');
@@ -160,13 +153,6 @@ impl Board {
         }
     }
 
-    // fn ordered_cars(&self) -> Vec<Car> {
-    //     let cars = self.cars.clone();
-    //     let mut retval = cars.into_iter().collect::<Vec<Car>>();
-    //     retval.sort();
-    //     retval
-    // }
-
     pub fn get_moves(&self) -> Vec<Self> {
         let mut moves = vec![];
 
@@ -213,28 +199,16 @@ impl Board {
                 }
             }
         }
-
         moves
     }
 
+    //if this function was instantaneous, we would save about 30% of our runtime :P
+    //the mallocation isn't the issue, I think it's just that we iterate over ~6 cars 220,000 times!
     fn add_to_moves(x: i32, y: i32, car: &Car, cars: &[Car]) -> Board {
         let new_car = Car::new(car.vertical, car.length, car.colour, x, y);
 
-        // let new_cars = cars
-        //     .into_iter()
-        //     .map(|old_car| {
-        //         if old_car.colour == car.colour {
-        //             car
-        //         } else {
-        //             *old_car
-        //         }
-        //     })
-        //     .collect();
-
-        // cars.
-        
         Board::from_cars(
-            cars.into_iter()
+            cars.iter()
                 .map(|old_car| {
                     if old_car.colour == car.colour {
                         new_car
