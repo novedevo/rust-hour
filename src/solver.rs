@@ -49,7 +49,7 @@ fn _astar(board: Board) -> (Board, usize) {
         for neighbour in current.get_moves() {
             // let tentative_g_score = g_score.get(&current).unwrap() + 1;
             if neighbour.is_solved() {
-                return (current, visited.len());
+                return (neighbour, visited.len());
             } else if !visited.contains(&neighbour.board_chars) {
                 // g_score.insert(neighbour.clone(), tentative_g_score);
                 // f_score.insert(
