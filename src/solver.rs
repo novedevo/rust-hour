@@ -3,7 +3,8 @@ use ahash::AHashSet; //10x faster than the default at the expense of some crypto
 use crate::board::Board;
 
 //returns the solved board and a number indicating how many distinct states were checked
-pub fn solve(board: Board) -> (Board, usize) { //wrapper
+pub fn solve(board: Board) -> (Board, usize) {
+    //wrapper
     dfs(board)
 }
 

@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use ahash::AHashSet;
 // use std::hash::{Hash, Hasher};
 
@@ -27,7 +29,7 @@ impl Car {
 
 #[derive(Debug, Clone)]
 pub struct Board {
-    cars: Vec<Car>,
+    cars: Vec<Rc<Car>>,
     pub board_chars: [[char; 6]; 6],
 }
 
@@ -46,7 +48,7 @@ pub struct Board {
 impl Board {
     pub fn from_str(board_path: &str) -> Self {
         let board_string = std::fs::read_to_string(board_path).unwrap();
-        let mut cars: Vec<Car> = Vec::new();
+        let mut cars: Vec<Rc<Car>> = Vec::new();
         let mut colours: AHashSet<char> = AHashSet::new();
         colours.insert('.');
         let chars = str_to_chars(&board_string);
@@ -54,13 +56,13 @@ impl Board {
             for (x, tile) in line.chars().enumerate() {
                 if !colours.contains(&tile) {
                     colours.insert(tile);
-                    cars.push(Car::new(
+                    cars.push(Rc::new(Car::new(
                         Self::is_vertical(chars, x, y),
                         Self::get_length(chars, x, y),
                         tile,
                         x as i32,
                         y as i32,
-                    ));
+                    )));
                 }
             }
         }
@@ -69,8 +71,8 @@ impl Board {
             board_chars: chars,
         }
     }
-    
-    fn from_cars(cars: Vec<Car>) -> Self {
+
+    fn from_cars(cars: Vec<Rc<Car>>) -> Self {
         Board {
             board_chars: Self::gen_chars(&cars),
             cars,
@@ -88,7 +90,7 @@ impl Board {
         acc
     }
 
-    fn gen_chars(cars: &[Car]) -> [[char; 6]; 6] {
+    fn gen_chars(cars: &[Rc<Car>]) -> [[char; 6]; 6] {
         let mut retval = [['.'; 6]; 6];
 
         for car in cars {
@@ -178,16 +180,16 @@ impl Board {
 
     //if this function was instantaneous, we would save about 30% of our runtime :P
     //the mallocation isn't the issue, I think it's just that we iterate over ~6 cars 220,000 times!
-    fn add_to_moves(x: i32, y: i32, car: &Car, cars: &[Car]) -> Board {
-        let new_car = Car::new(car.vertical, car.length, car.colour, x, y);
+    fn add_to_moves(x: i32, y: i32, car: &Car, cars: &[Rc<Car>]) -> Board {
+        let new_car = Rc::new(Car::new(car.vertical, car.length, car.colour, x, y));
 
         Board::from_cars(
             cars.iter()
                 .map(|old_car| {
                     if old_car.colour == car.colour {
-                        new_car
+                        Rc::clone(&new_car)
                     } else {
-                        *old_car
+                        Rc::clone(old_car)
                     }
                 })
                 .collect(),
