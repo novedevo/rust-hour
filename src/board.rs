@@ -1,7 +1,7 @@
-use std::rc::Rc;
+use std::{cmp::Ordering, rc::Rc};
 
 use ahash::AHashSet;
-// use std::hash::{Hash, Hasher};
+use std::hash::{Hash, Hasher};
 
 #[derive(PartialEq, Eq, Clone, Debug, Copy)]
 struct Car {
@@ -31,19 +31,35 @@ impl Car {
 pub struct Board {
     cars: Vec<Rc<Car>>,
     pub board_chars: [[char; 6]; 6],
+    pub h: usize,
+    pub g: usize,
 }
 
-// impl PartialEq for Board {
-//     fn eq(&self, other: &Self) -> bool {
-//         self.board_chars == other.board_chars
-//     }
-// }
+impl Ord for Board {
+    fn cmp(&self, other: &Self) -> Ordering {
+        other.f().cmp(&self.f())
+    }
+}
 
-// impl Hash for Board {
-//     fn hash<H: Hasher>(&self, state: &mut H) {
-//         self.board_chars.hash(state)
-//     }
-// }
+impl PartialOrd for Board {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialEq for Board {
+    fn eq(&self, other: &Self) -> bool {
+        self.board_chars == other.board_chars
+    }
+}
+
+impl Eq for Board{}
+
+impl Hash for Board {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.board_chars.hash(state)
+    }
+}
 
 impl Board {
     pub fn from_str(board_path: &str) -> Self {
@@ -69,13 +85,18 @@ impl Board {
         Board {
             cars,
             board_chars: chars,
+            g: 0,
+            h: Self::gen_heuristic(chars)
         }
     }
 
-    fn from_cars(cars: Vec<Rc<Car>>) -> Self {
+    fn from_cars(cars: Vec<Rc<Car>>, parental_g: usize) -> Self {
+        let chars = Self::gen_chars(&cars);
         Board {
-            board_chars: Self::gen_chars(&cars),
+            board_chars: chars,
             cars,
+            g: parental_g + 1,
+            h: Self::gen_heuristic(chars)
         }
     }
 
@@ -138,7 +159,7 @@ impl Board {
                     if car.x - i >= 0
                         && self.board_chars[car.y as usize][(car.x - i) as usize] == '.'
                     {
-                        moves.push(Self::add_to_moves(car.x - i, car.y, car, &self.cars))
+                        moves.push(Self::add_to_moves(car.x - i, car.y, car, &self.cars, self.g))
                     } else {
                         break;
                     }
@@ -148,7 +169,7 @@ impl Board {
                         && self.board_chars[car.y as usize][(car.x + car.length + i) as usize]
                             == '.'
                     {
-                        moves.push(Self::add_to_moves(car.x + i, car.y, car, &self.cars))
+                        moves.push(Self::add_to_moves(car.x + i, car.y, car, &self.cars, self.g))
                     } else {
                         break;
                     }
@@ -158,7 +179,7 @@ impl Board {
                     if car.y - i >= 0
                         && self.board_chars[(car.y - i) as usize][car.x as usize] == '.'
                     {
-                        moves.push(Self::add_to_moves(car.x, car.y - i, car, &self.cars))
+                        moves.push(Self::add_to_moves(car.x, car.y - i, car, &self.cars, self.g))
                     } else {
                         break;
                     }
@@ -168,7 +189,7 @@ impl Board {
                         && self.board_chars[(car.y + car.length + i) as usize][car.x as usize]
                             == '.'
                     {
-                        moves.push(Self::add_to_moves(car.x, car.y + i, car, &self.cars))
+                        moves.push(Self::add_to_moves(car.x, car.y + i, car, &self.cars, self.g))
                     } else {
                         break;
                     }
@@ -180,7 +201,7 @@ impl Board {
 
     //if this function was instantaneous, we would save about 30% of our runtime :P
     //the mallocation isn't the issue, I think it's just that we iterate over ~6 cars 220,000 times!
-    fn add_to_moves(x: i32, y: i32, car: &Car, cars: &[Rc<Car>]) -> Board {
+    fn add_to_moves(x: i32, y: i32, car: &Car, cars: &[Rc<Car>], g: usize) -> Board {
         let new_car = Rc::new(Car::new(car.vertical, car.length, car.colour, x, y));
 
         Board::from_cars(
@@ -193,6 +214,7 @@ impl Board {
                     }
                 })
                 .collect(),
+                g
         )
     }
 
@@ -203,6 +225,22 @@ impl Board {
             }
         }
         false
+    }
+    
+    fn gen_heuristic(chars: [[char; 6];6]) -> usize {
+        let mut retval = 1;
+        for character in chars[2].iter().rev() {
+            match character {
+                'X' => break,
+                '.' => continue,
+                _ => retval += 1
+            }
+        }
+        retval
+    }
+    
+    fn f(&self) -> usize {
+        self.g + self.h
     }
 }
 
