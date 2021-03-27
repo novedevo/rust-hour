@@ -1,13 +1,13 @@
 use std::collections::BinaryHeap;
 
-use ahash::{AHashMap, AHashSet}; //10x faster than the default at the expense of some cryptographic defenses
+use ahash::{AHashSet}; //10x faster than the default at the expense of some cryptographic defenses
 
 use crate::board::Board;
 
 //returns the solved board and a number indicating how many distinct states were checked
 pub fn solve(board: Board) -> (Board, usize) {
     //wrapper
-    astar(board)
+    _astar(board)
 }
 
 //dfs is ~30% less iterations than bfs in this situation, for some reason
@@ -32,7 +32,7 @@ fn _dfs(board: Board) -> (Board, usize) {
     panic!("at the disco!");
 }
 
-fn astar(board: Board) -> (Board, usize) {
+fn _astar(board: Board) -> (Board, usize) {
     let mut open_set = BinaryHeap::<Board>::new();
     open_set.push(board.clone());
 
@@ -49,7 +49,7 @@ fn astar(board: Board) -> (Board, usize) {
         for neighbour in current.get_moves() {
             // let tentative_g_score = g_score.get(&current).unwrap() + 1;
             if neighbour.is_solved() {
-                return (current, 0);
+                return (current, visited.len());
             } else if !visited.contains(&neighbour.board_chars) {
                 // g_score.insert(neighbour.clone(), tentative_g_score);
                 // f_score.insert(

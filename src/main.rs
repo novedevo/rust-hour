@@ -5,6 +5,7 @@ use board::Board;
 use std::{fs::File, io::Write, path::Path, thread};
 
 fn main() {
+    return;
     let mut threads = Vec::with_capacity(40);
     for entry in std::fs::read_dir("puzzles").unwrap() {
         let new_thread = thread::spawn(|| {
