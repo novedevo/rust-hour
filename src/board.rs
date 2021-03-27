@@ -1,5 +1,5 @@
 use ahash::AHashSet;
-use std::hash::{Hash, Hasher};
+// use std::hash::{Hash, Hasher};
 
 #[derive(PartialEq, Eq, Clone, Debug, Copy)]
 struct Car {
@@ -25,23 +25,23 @@ impl Car {
     }
 }
 
-#[derive(Debug, Eq, Clone)]
+#[derive(Debug, Clone)]
 pub struct Board {
     cars: Vec<Car>,
-    board_chars: [[char; 6]; 6],
+    pub board_chars: [[char; 6]; 6],
 }
 
-impl PartialEq for Board {
-    fn eq(&self, other: &Self) -> bool {
-        self.board_chars == other.board_chars
-    }
-}
+// impl PartialEq for Board {
+//     fn eq(&self, other: &Self) -> bool {
+//         self.board_chars == other.board_chars
+//     }
+// }
 
-impl Hash for Board {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.board_chars.hash(state)
-    }
-}
+// impl Hash for Board {
+//     fn hash<H: Hasher>(&self, state: &mut H) {
+//         self.board_chars.hash(state)
+//     }
+// }
 
 impl Board {
     pub fn from_str(board_path: &str) -> Self {
@@ -69,7 +69,7 @@ impl Board {
             board_chars: chars,
         }
     }
-
+    
     fn from_cars(cars: Vec<Car>) -> Self {
         Board {
             board_chars: Self::gen_chars(&cars),

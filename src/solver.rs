@@ -1,14 +1,16 @@
-use ahash::AHashSet;
+use ahash::AHashSet; //10x faster than the default at the expense of some cryptographic defenses
 
 use crate::board::Board;
 
-pub fn solve(board: Board) -> (Board, usize) {
+//returns the solved board and a number indicating how many distinct states were checked
+pub fn solve(board: Board) -> (Board, usize) { //wrapper
     dfs(board)
 }
 
+//dfs is ~30% less iterations than bfs in this situation, for some reason
 fn dfs(board: Board) -> (Board, usize) {
-    let mut visited: AHashSet<Board> = AHashSet::new();
-    visited.insert(board.clone());
+    let mut visited: AHashSet<[[char; 6]; 6]> = AHashSet::new(); //keep track of all the nodes we have visited to avoid backtracking
+    visited.insert(board.board_chars);
 
     let mut stack: Vec<Board> = Vec::new();
     stack.push(board);
@@ -17,8 +19,8 @@ fn dfs(board: Board) -> (Board, usize) {
         for new_board in board.get_moves() {
             if new_board.is_solved() {
                 return (new_board, visited.len());
-            } else if !visited.contains(&new_board) {
-                visited.insert(new_board.clone());
+            } else if !visited.contains(&new_board.board_chars) {
+                visited.insert(new_board.board_chars);
                 stack.push(new_board);
             }
         }
