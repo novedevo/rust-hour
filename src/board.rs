@@ -90,16 +90,6 @@ impl Board {
         }
     }
 
-    // fn from_car_ref(cars: &Vec<Car>, parental_g: usize) -> Self {
-    //     let chars = Self::gen_chars(cars);
-    //     Board {
-    //         board_chars: chars,
-    //         cars: cars.clone(),
-    //         g: parental_g + 1,
-    //         h: Self::gen_heuristic(chars),
-    //     }
-    // }
-
     fn from_cars(cars: Vec<Car>, parental_g: usize) -> Self {
         let chars = Self::gen_chars(&cars);
         Board {
@@ -108,17 +98,6 @@ impl Board {
             g: parental_g + 1,
             h: Self::gen_heuristic(chars),
         }
-    }
-
-    pub fn to_str(&self) -> Vec<char> {
-        let mut acc = vec![];
-        for line in self.board_chars.iter() {
-            for c in line {
-                acc.push(*c);
-            }
-            acc.push('\n')
-        }
-        acc
     }
 
     fn gen_chars(cars: &[Car]) -> [[char; 6]; 6] {
