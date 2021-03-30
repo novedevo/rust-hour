@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, convert::TryInto, rc::Rc};
+use std::cmp::Ordering; //, convert::TryInto, rc::Rc};
 
 use ahash::AHashSet;
 use std::hash::{Hash, Hasher};
@@ -90,15 +90,15 @@ impl Board {
         }
     }
 
-    fn from_car_ref(cars: &Vec<Car>, parental_g: usize) -> Self {
-        let chars = Self::gen_chars(cars);
-        Board {
-            board_chars: chars,
-            cars: cars.clone(),
-            g: parental_g + 1,
-            h: Self::gen_heuristic(chars),
-        }
-    }
+    // fn from_car_ref(cars: &Vec<Car>, parental_g: usize) -> Self {
+    //     let chars = Self::gen_chars(cars);
+    //     Board {
+    //         board_chars: chars,
+    //         cars: cars.clone(),
+    //         g: parental_g + 1,
+    //         h: Self::gen_heuristic(chars),
+    //     }
+    // }
 
     fn from_cars(cars: Vec<Car>, parental_g: usize) -> Self {
         let chars = Self::gen_chars(&cars);
@@ -227,7 +227,7 @@ impl Board {
                 }
             }
         }
-        
+
         moves
     }
 

@@ -46,20 +46,18 @@ fn _astar(board: Board) -> (Board, usize) {
     // f_score.insert(board.clone(), board.h);
 
     while let Some(current) = open_set.pop() {
-        unsafe {
-            for neighbour in current.get_moves() {
-                // let tentative_g_score = g_score.get(&current).unwrap() + 1;
-                if neighbour.is_solved() {
-                    return (neighbour, visited.len());
-                } else if !visited.contains(&neighbour.board_chars) {
-                    // g_score.insert(neighbour.clone(), tentative_g_score);
-                    // f_score.insert(
-                    //     neighbour.clone(),
-                    //     *g_score.get(&neighbour).unwrap() + neighbour.h,
-                    // );
-                    visited.insert(neighbour.board_chars);
-                    open_set.push(neighbour.clone())
-                }
+        for neighbour in current.get_moves() {
+            // let tentative_g_score = g_score.get(&current).unwrap() + 1;
+            if neighbour.is_solved() {
+                return (neighbour, visited.len());
+            } else if !visited.contains(&neighbour.board_chars) {
+                // g_score.insert(neighbour.clone(), tentative_g_score);
+                // f_score.insert(
+                //     neighbour.clone(),
+                //     *g_score.get(&neighbour).unwrap() + neighbour.h,
+                // );
+                visited.insert(neighbour.board_chars);
+                open_set.push(neighbour.clone())
             }
         }
     }
