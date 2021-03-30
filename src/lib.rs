@@ -14,7 +14,7 @@ mod tests {
             let new_thread = thread::spawn(|| {
                 let entry = entry.unwrap();
                 let a = Board::from_str(entry.path().to_str().unwrap());
-                solver::stress_solve(a.clone());
+                solver::stress_solve(a);
             });
             threads.push(new_thread);
         }
@@ -22,5 +22,10 @@ mod tests {
         for handle in threads {
             handle.join().unwrap();
         }
+    }
+    
+    #[test]
+    fn solve() {
+        solver::solve("puzzles/B19.txt", "solutions/B19.txt");
     }
 }

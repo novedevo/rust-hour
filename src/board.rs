@@ -1,7 +1,8 @@
 // use std::cmp::Ordering; //, convert::TryInto, rc::Rc};
 
 use ahash::AHashSet;
-use std::hash::{Hash, Hasher};
+use std::{fmt::Display, hash::{Hash, Hasher}};
+use std::fmt;
 
 #[derive(PartialEq, Eq, Clone, Debug, Copy)]
 struct Car {
@@ -33,18 +34,6 @@ pub struct Board {
     pub board_chars: [[char; 6]; 6],
 }
 
-// impl Ord for Board {
-//     fn cmp(&self, other: &Self) -> Ordering {
-//         other.f().cmp(&self.f())
-//     }
-// }
-
-// impl PartialOrd for Board {
-//     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-//         Some(self.cmp(other))
-//     }
-// }
-
 impl PartialEq for Board {
     fn eq(&self, other: &Self) -> bool {
         self.board_chars == other.board_chars
@@ -59,9 +48,15 @@ impl Hash for Board {
     }
 }
 
+impl Display for Board {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.to_string())
+    }
+}
+
 impl Board {
     pub fn from_str(board_path: &str) -> Self {
-        let board_string = std::fs::read_to_string(board_path).unwrap();
+        let board_string = std::fs::read_to_string(board_path).expect("Error: could not read file. Panicking!");
         let mut cars: Vec<Car> = Vec::with_capacity(15); //largest board in test suite has only 15 colours / cars
         let mut colours: AHashSet<char> = AHashSet::with_capacity(15); //so we reserve that amount
         colours.insert('.');
@@ -133,10 +128,10 @@ impl Board {
         }
     }
 
-    pub fn get_moves(&self) -> Vec<Self> {
+    pub fn get_moves(&mut self) -> Vec<Self> {
         let mut moves = Vec::with_capacity(20);
 
-        let cars = &mut self.cars.clone() as *mut Vec<Car>;
+        let cars = &mut self.cars as *mut Vec<Car>;
 
         // I think this is completely safe, actually. I never do anything too weird with memory.
         // the only reason I need unsafe is to replicate basically these lines of code:
@@ -211,6 +206,17 @@ impl Board {
             }
         }
         false
+    }
+    
+    fn to_string(&self) -> String {
+        let mut acc = Vec::with_capacity(45);
+        for line in self.board_chars.iter() {
+            for c in line {
+                acc.push(*c);
+            }
+            acc.push('\n')
+        }
+        acc.into_iter().collect()
     }
 }
 
