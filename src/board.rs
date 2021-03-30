@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, rc::Rc};
+use std::{cmp::Ordering, convert::TryInto, rc::Rc};
 
 use ahash::AHashSet;
 use std::hash::{Hash, Hasher};
@@ -29,7 +29,7 @@ impl Car {
 
 #[derive(Debug, Clone)]
 pub struct Board {
-    cars: Vec<Rc<Car>>,
+    cars: Vec<Car>,
     pub board_chars: [[char; 6]; 6],
     pub h: usize,
     pub g: usize,
@@ -64,7 +64,7 @@ impl Hash for Board {
 impl Board {
     pub fn from_str(board_path: &str) -> Self {
         let board_string = std::fs::read_to_string(board_path).unwrap();
-        let mut cars: Vec<Rc<Car>> = Vec::new();
+        let mut cars: Vec<Car> = Vec::new();
         let mut colours: AHashSet<char> = AHashSet::new();
         colours.insert('.');
         let chars = str_to_chars(&board_string);
@@ -72,13 +72,13 @@ impl Board {
             for (x, tile) in line.chars().enumerate() {
                 if !colours.contains(&tile) {
                     colours.insert(tile);
-                    cars.push(Rc::new(Car::new(
+                    cars.push(Car::new(
                         Self::is_vertical(chars, x, y),
                         Self::get_length(chars, x, y),
                         tile,
                         x as i32,
                         y as i32,
-                    )));
+                    ));
                 }
             }
         }
@@ -90,7 +90,17 @@ impl Board {
         }
     }
 
-    fn from_cars(cars: Vec<Rc<Car>>, parental_g: usize) -> Self {
+    fn from_car_ref(cars: &Vec<Car>, parental_g: usize) -> Self {
+        let chars = Self::gen_chars(cars);
+        Board {
+            board_chars: chars,
+            cars: cars.clone(),
+            g: parental_g + 1,
+            h: Self::gen_heuristic(chars),
+        }
+    }
+
+    fn from_cars(cars: Vec<Car>, parental_g: usize) -> Self {
         let chars = Self::gen_chars(&cars);
         Board {
             board_chars: chars,
@@ -111,7 +121,7 @@ impl Board {
         acc
     }
 
-    fn gen_chars(cars: &[Rc<Car>]) -> [[char; 6]; 6] {
+    fn gen_chars(cars: &[Car]) -> [[char; 6]; 6] {
         let mut retval = [['.'; 6]; 6];
 
         for car in cars {
@@ -153,69 +163,108 @@ impl Board {
     pub fn get_moves(&self) -> Vec<Self> {
         let mut moves = vec![];
 
-        for car in &self.cars {
-            if !car.vertical {
-                for i in 1..5 {
-                    if car.x - i >= 0
-                        && self.board_chars[car.y as usize][(car.x - i) as usize] == '.'
-                    {
-                        moves.push(Self::add_to_moves(
-                            car.x - i,
-                            car.y,
-                            car,
-                            &self.cars,
-                            self.g,
-                        ))
-                    } else {
-                        break;
+        let cars = &mut self.cars.clone() as *mut Vec<Car>;
+        
+        // I think this is completely safe, actually. I never do anything too weird with memory.
+        // the only reason I need unsafe is to replicate basically these lines of code:
+        // car.x += 1;
+        // cars.clone();
+        // car.x -= 1;
+        //
+        unsafe {
+            for car in &mut *cars {
+                if !car.vertical {
+                    for i in 1..5 {
+                        if car.x - i >= 0
+                            && self.board_chars[car.y as usize][(car.x - i) as usize] == '.'
+                        {
+                            car.x -= i;
+
+                            let new_board = Board::from_cars((*cars).clone(), self.g);
+
+                            moves.push(new_board);
+
+                            car.x += i;
+
+                            // moves.push(Self::add_to_moves(
+                            //     car.x - i,
+                            //     car.y,
+                            //     car,
+                            //     &self.cars,
+                            //     self.g,
+                            // ))
+                        } else {
+                            break;
+                        }
                     }
-                }
-                for i in 1..5 {
-                    if car.x + car.length + i < 6
-                        && self.board_chars[car.y as usize][(car.x + car.length + i) as usize]
-                            == '.'
-                    {
-                        moves.push(Self::add_to_moves(
-                            car.x + i,
-                            car.y,
-                            car,
-                            &self.cars,
-                            self.g,
-                        ))
-                    } else {
-                        break;
+                    for i in 1..5 {
+                        if car.x + car.length + i < 6
+                            && self.board_chars[car.y as usize][(car.x + car.length + i) as usize]
+                                == '.'
+                        {
+                            car.x += i;
+
+                            let new_board = Board::from_cars((*cars).clone(), self.g);
+
+                            moves.push(new_board);
+
+                            car.x -= i;
+                            // moves.push(Self::add_to_moves(
+                            //     car.x + i,
+                            //     car.y,
+                            //     car,
+                            //     &self.cars,
+                            //     self.g,
+                            // ))
+                        } else {
+                            break;
+                        }
                     }
-                }
-            } else {
-                for i in 1..5 {
-                    if car.y - i >= 0
-                        && self.board_chars[(car.y - i) as usize][car.x as usize] == '.'
-                    {
-                        moves.push(Self::add_to_moves(
-                            car.x,
-                            car.y - i,
-                            car,
-                            &self.cars,
-                            self.g,
-                        ))
-                    } else {
-                        break;
+                } else {
+                    for i in 1..5 {
+                        if car.y - i >= 0
+                            && self.board_chars[(car.y - i) as usize][car.x as usize] == '.'
+                        {
+                            car.y -= i;
+
+                            let new_board = Board::from_cars((*cars).clone(), self.g);
+
+                            moves.push(new_board);
+
+                            car.y += i;
+                            // moves.push(Self::add_to_moves(
+                            //     car.x,
+                            //     car.y - i,
+                            //     car,
+                            //     &self.cars,
+                            //     self.g,
+                            // ))
+                        } else {
+                            break;
+                        }
                     }
-                }
-                for i in 1..5 {
-                    if car.y + car.length + i < 6
-                        && self.board_chars[(car.y + car.length + i) as usize][car.x as usize]
-                            == '.'
-                    {
-                        moves.push(Self::add_to_moves(
-                            car.x,
-                            car.y + i,
-                            car,
-                            &self.cars,
-                            self.g,
-                        ))
-                    } else {
-                        break;
+                    for i in 1..5 {
+                        if car.y + car.length + i < 6
+                            && self.board_chars[(car.y + car.length + i) as usize][car.x as usize]
+                                == '.'
+                        {
+                            car.y += i;
+
+                            let new_board = Board::from_cars((*cars).clone(), self.g);
+
+                            moves.push(new_board);
+
+                            car.y -= i;
+                            // moves.push(Self::add_to_moves(
+                            //     car.x,
+                            //     car.y + i,
+                            //     car,
+                            //     &self.cars,
+                            //     self.g,
+                            // ))
+                        } else {
+                            break;
+                        }
                     }
                 }
             }
@@ -225,22 +274,22 @@ impl Board {
 
     //if this function was instantaneous, we would save about 30% of our runtime :P
     //the mallocation isn't the issue, I think it's just that we iterate over ~6 cars 220,000 times!
-    fn add_to_moves(x: i32, y: i32, car: &Car, cars: &[Rc<Car>], g: usize) -> Board {
-        let new_car = Rc::new(Car::new(car.vertical, car.length, car.colour, x, y));
+    // fn add_to_moves(x: i32, y: i32, car: &Car, cars: &[Rc<Car>], g: usize) -> Board {
+    //     let new_car = Rc::new(Car::new(car.vertical, car.length, car.colour, x, y));
 
-        Board::from_cars(
-            cars.iter()
-                .map(|old_car| {
-                    if old_car.colour == car.colour {
-                        Rc::clone(&new_car)
-                    } else {
-                        Rc::clone(old_car)
-                    }
-                })
-                .collect(),
-            g,
-        )
-    }
+    //     Board::from_cars(
+    //         cars.iter()
+    //             .map(|old_car| {
+    //                 if old_car.colour == car.colour {
+    //                     Rc::clone(&new_car)
+    //                 } else {
+    //                     Rc::clone(old_car)
+    //                 }
+    //             })
+    //             .collect(),
+    //         g,
+    //     )
+    // }
 
     pub fn is_solved(&self) -> bool {
         for car in &self.cars {
@@ -281,3 +330,9 @@ fn str_to_chars(board_string: &str) -> [[char; 6]; 6] {
 
     char_array
 }
+
+// unsafe fn refclone(cars: *const Vec<Car) -> Vec<Car> {
+//     let cars = *cars;
+
+//     cars.clone()
+// }

@@ -1,3 +1,5 @@
+#![feature(vec_into_raw_parts)]
+
 mod board;
 pub mod solver;
 
