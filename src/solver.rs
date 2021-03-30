@@ -20,7 +20,7 @@ pub fn stress_solve(board: Board) {
 //dfs is twice as fast as bfs.
 //A* is in between.
 fn _dfs(board: &Board) -> (Board, usize) {
-    let mut visited: AHashSet<[[char; 6]; 6]> = AHashSet::new(); //keep track of all the nodes we have visited to avoid backtracking
+    let mut visited: AHashSet<[[char; 6]; 6]> = AHashSet::with_capacity(10000); //keep track of all the nodes we have visited to avoid backtracking
     visited.insert(board.board_chars);
 
     let mut stack: Vec<Board> = vec![];

@@ -62,8 +62,8 @@ impl Hash for Board {
 impl Board {
     pub fn from_str(board_path: &str) -> Self {
         let board_string = std::fs::read_to_string(board_path).unwrap();
-        let mut cars: Vec<Car> = Vec::new();
-        let mut colours: AHashSet<char> = AHashSet::new();
+        let mut cars: Vec<Car> = Vec::with_capacity(15); //largest board in test suite has only 15 colours / cars
+        let mut colours: AHashSet<char> = AHashSet::with_capacity(15); //so we reserve that amount
         colours.insert('.');
         let chars = str_to_chars(&board_string);
         for (y, line) in board_string.lines().enumerate() {
@@ -134,7 +134,7 @@ impl Board {
     }
 
     pub fn get_moves(&self) -> Vec<Self> {
-        let mut moves = vec![];
+        let mut moves = Vec::with_capacity(20);
 
         let cars = &mut self.cars.clone() as *mut Vec<Car>;
 
