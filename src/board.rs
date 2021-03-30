@@ -164,13 +164,12 @@ impl Board {
         let mut moves = vec![];
 
         let cars = &mut self.cars.clone() as *mut Vec<Car>;
-        
+
         // I think this is completely safe, actually. I never do anything too weird with memory.
         // the only reason I need unsafe is to replicate basically these lines of code:
         // car.x += 1;
         // cars.clone();
         // car.x -= 1;
-        //
         unsafe {
             for car in &mut *cars {
                 if !car.vertical {
@@ -179,20 +178,9 @@ impl Board {
                             && self.board_chars[car.y as usize][(car.x - i) as usize] == '.'
                         {
                             car.x -= i;
-
                             let new_board = Board::from_cars((*cars).clone(), self.g);
-
                             moves.push(new_board);
-
                             car.x += i;
-
-                            // moves.push(Self::add_to_moves(
-                            //     car.x - i,
-                            //     car.y,
-                            //     car,
-                            //     &self.cars,
-                            //     self.g,
-                            // ))
                         } else {
                             break;
                         }
@@ -203,19 +191,9 @@ impl Board {
                                 == '.'
                         {
                             car.x += i;
-
                             let new_board = Board::from_cars((*cars).clone(), self.g);
-
                             moves.push(new_board);
-
                             car.x -= i;
-                            // moves.push(Self::add_to_moves(
-                            //     car.x + i,
-                            //     car.y,
-                            //     car,
-                            //     &self.cars,
-                            //     self.g,
-                            // ))
                         } else {
                             break;
                         }
@@ -226,19 +204,9 @@ impl Board {
                             && self.board_chars[(car.y - i) as usize][car.x as usize] == '.'
                         {
                             car.y -= i;
-
                             let new_board = Board::from_cars((*cars).clone(), self.g);
-
                             moves.push(new_board);
-
                             car.y += i;
-                            // moves.push(Self::add_to_moves(
-                            //     car.x,
-                            //     car.y - i,
-                            //     car,
-                            //     &self.cars,
-                            //     self.g,
-                            // ))
                         } else {
                             break;
                         }
@@ -249,19 +217,9 @@ impl Board {
                                 == '.'
                         {
                             car.y += i;
-
                             let new_board = Board::from_cars((*cars).clone(), self.g);
-
                             moves.push(new_board);
-
                             car.y -= i;
-                            // moves.push(Self::add_to_moves(
-                            //     car.x,
-                            //     car.y + i,
-                            //     car,
-                            //     &self.cars,
-                            //     self.g,
-                            // ))
                         } else {
                             break;
                         }
@@ -269,6 +227,7 @@ impl Board {
                 }
             }
         }
+        
         moves
     }
 
