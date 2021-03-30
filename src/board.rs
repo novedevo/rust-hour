@@ -53,7 +53,7 @@ impl PartialEq for Board {
     }
 }
 
-impl Eq for Board{}
+impl Eq for Board {}
 
 impl Hash for Board {
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -86,7 +86,7 @@ impl Board {
             cars,
             board_chars: chars,
             g: 0,
-            h: Self::gen_heuristic(chars)
+            h: Self::gen_heuristic(chars),
         }
     }
 
@@ -96,7 +96,7 @@ impl Board {
             board_chars: chars,
             cars,
             g: parental_g + 1,
-            h: Self::gen_heuristic(chars)
+            h: Self::gen_heuristic(chars),
         }
     }
 
@@ -159,7 +159,13 @@ impl Board {
                     if car.x - i >= 0
                         && self.board_chars[car.y as usize][(car.x - i) as usize] == '.'
                     {
-                        moves.push(Self::add_to_moves(car.x - i, car.y, car, &self.cars, self.g))
+                        moves.push(Self::add_to_moves(
+                            car.x - i,
+                            car.y,
+                            car,
+                            &self.cars,
+                            self.g,
+                        ))
                     } else {
                         break;
                     }
@@ -169,7 +175,13 @@ impl Board {
                         && self.board_chars[car.y as usize][(car.x + car.length + i) as usize]
                             == '.'
                     {
-                        moves.push(Self::add_to_moves(car.x + i, car.y, car, &self.cars, self.g))
+                        moves.push(Self::add_to_moves(
+                            car.x + i,
+                            car.y,
+                            car,
+                            &self.cars,
+                            self.g,
+                        ))
                     } else {
                         break;
                     }
@@ -179,7 +191,13 @@ impl Board {
                     if car.y - i >= 0
                         && self.board_chars[(car.y - i) as usize][car.x as usize] == '.'
                     {
-                        moves.push(Self::add_to_moves(car.x, car.y - i, car, &self.cars, self.g))
+                        moves.push(Self::add_to_moves(
+                            car.x,
+                            car.y - i,
+                            car,
+                            &self.cars,
+                            self.g,
+                        ))
                     } else {
                         break;
                     }
@@ -189,7 +207,13 @@ impl Board {
                         && self.board_chars[(car.y + car.length + i) as usize][car.x as usize]
                             == '.'
                     {
-                        moves.push(Self::add_to_moves(car.x, car.y + i, car, &self.cars, self.g))
+                        moves.push(Self::add_to_moves(
+                            car.x,
+                            car.y + i,
+                            car,
+                            &self.cars,
+                            self.g,
+                        ))
                     } else {
                         break;
                     }
@@ -214,7 +238,7 @@ impl Board {
                     }
                 })
                 .collect(),
-                g
+            g,
         )
     }
 
@@ -226,19 +250,19 @@ impl Board {
         }
         false
     }
-    
-    fn gen_heuristic(chars: [[char; 6];6]) -> usize {
+
+    fn gen_heuristic(chars: [[char; 6]; 6]) -> usize {
         let mut retval = 1;
         for character in chars[2].iter().rev() {
             match character {
                 'X' => break,
                 '.' => continue,
-                _ => retval += 1
+                _ => retval += 1,
             }
         }
         retval
     }
-    
+
     fn f(&self) -> usize {
         self.g + self.h
     }
