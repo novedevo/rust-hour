@@ -1,4 +1,4 @@
-use std::cmp::Ordering; //, convert::TryInto, rc::Rc};
+// use std::cmp::Ordering; //, convert::TryInto, rc::Rc};
 
 use ahash::AHashSet;
 use std::hash::{Hash, Hasher};
@@ -31,21 +31,19 @@ impl Car {
 pub struct Board {
     cars: Vec<Car>,
     pub board_chars: [[char; 6]; 6],
-    pub h: usize,
-    pub g: usize,
 }
 
-impl Ord for Board {
-    fn cmp(&self, other: &Self) -> Ordering {
-        other.f().cmp(&self.f())
-    }
-}
+// impl Ord for Board {
+//     fn cmp(&self, other: &Self) -> Ordering {
+//         other.f().cmp(&self.f())
+//     }
+// }
 
-impl PartialOrd for Board {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
+// impl PartialOrd for Board {
+//     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+//         Some(self.cmp(other))
+//     }
+// }
 
 impl PartialEq for Board {
     fn eq(&self, other: &Self) -> bool {
@@ -85,18 +83,14 @@ impl Board {
         Board {
             cars,
             board_chars: chars,
-            g: 0,
-            h: Self::gen_heuristic(chars),
         }
     }
 
-    fn from_cars(cars: Vec<Car>, parental_g: usize) -> Self {
+    fn from_cars(cars: Vec<Car>) -> Self {
         let chars = Self::gen_chars(&cars);
         Board {
             board_chars: chars,
             cars,
-            g: parental_g + 1,
-            h: Self::gen_heuristic(chars),
         }
     }
 
@@ -157,7 +151,7 @@ impl Board {
                             && self.board_chars[car.y as usize][(car.x - i) as usize] == '.'
                         {
                             car.x -= i;
-                            let new_board = Board::from_cars((*cars).clone(), self.g);
+                            let new_board = Board::from_cars((*cars).clone());
                             moves.push(new_board);
                             car.x += i;
                         } else {
@@ -170,7 +164,7 @@ impl Board {
                                 == '.'
                         {
                             car.x += i;
-                            let new_board = Board::from_cars((*cars).clone(), self.g);
+                            let new_board = Board::from_cars((*cars).clone());
                             moves.push(new_board);
                             car.x -= i;
                         } else {
@@ -183,7 +177,7 @@ impl Board {
                             && self.board_chars[(car.y - i) as usize][car.x as usize] == '.'
                         {
                             car.y -= i;
-                            let new_board = Board::from_cars((*cars).clone(), self.g);
+                            let new_board = Board::from_cars((*cars).clone());
                             moves.push(new_board);
                             car.y += i;
                         } else {
@@ -196,7 +190,7 @@ impl Board {
                                 == '.'
                         {
                             car.y += i;
-                            let new_board = Board::from_cars((*cars).clone(), self.g);
+                            let new_board = Board::from_cars((*cars).clone());
                             moves.push(new_board);
                             car.y -= i;
                         } else {
@@ -210,25 +204,6 @@ impl Board {
         moves
     }
 
-    //if this function was instantaneous, we would save about 30% of our runtime :P
-    //the mallocation isn't the issue, I think it's just that we iterate over ~6 cars 220,000 times!
-    // fn add_to_moves(x: i32, y: i32, car: &Car, cars: &[Rc<Car>], g: usize) -> Board {
-    //     let new_car = Rc::new(Car::new(car.vertical, car.length, car.colour, x, y));
-
-    //     Board::from_cars(
-    //         cars.iter()
-    //             .map(|old_car| {
-    //                 if old_car.colour == car.colour {
-    //                     Rc::clone(&new_car)
-    //                 } else {
-    //                     Rc::clone(old_car)
-    //                 }
-    //             })
-    //             .collect(),
-    //         g,
-    //     )
-    // }
-
     pub fn is_solved(&self) -> bool {
         for car in &self.cars {
             if car.is_victorious() {
@@ -236,22 +211,6 @@ impl Board {
             }
         }
         false
-    }
-
-    fn gen_heuristic(chars: [[char; 6]; 6]) -> usize {
-        let mut retval = 1;
-        for character in chars[2].iter().rev() {
-            match character {
-                'X' => break,
-                '.' => continue,
-                _ => retval += 1,
-            }
-        }
-        retval
-    }
-
-    fn f(&self) -> usize {
-        self.g + self.h
     }
 }
 
@@ -268,9 +227,3 @@ fn str_to_chars(board_string: &str) -> [[char; 6]; 6] {
 
     char_array
 }
-
-// unsafe fn refclone(cars: *const Vec<Car) -> Vec<Car> {
-//     let cars = *cars;
-
-//     cars.clone()
-// }

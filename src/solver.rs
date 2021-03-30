@@ -1,4 +1,4 @@
-use std::collections::{BinaryHeap, VecDeque};
+// use std::collections::{BinaryHeap, VecDeque};
 
 use ahash::AHashSet; //10x faster than the default at the expense of some cryptographic defenses
 
@@ -23,16 +23,16 @@ fn _dfs(board: &Board) -> (Board, usize) {
     let mut visited: AHashSet<[[char; 6]; 6]> = AHashSet::new(); //keep track of all the nodes we have visited to avoid backtracking
     visited.insert(board.board_chars);
 
-    let mut stack: VecDeque<Board> = VecDeque::new();
-    stack.push_back(board.clone());
+    let mut stack: Vec<Board> = vec![];
+    stack.push(board.clone());
 
-    while let Some(board) = stack.pop_back() {
+    while let Some(board) = stack.pop() {
         for new_board in board.get_moves() {
             if new_board.is_solved() {
                 return (new_board, visited.len());
             } else if !visited.contains(&new_board.board_chars) {
                 visited.insert(new_board.board_chars);
-                stack.push_back(new_board);
+                stack.push(new_board);
             }
         }
     }
@@ -40,25 +40,25 @@ fn _dfs(board: &Board) -> (Board, usize) {
     panic!("at the disco!");
 }
 
-fn _astar(board: &Board) -> (Board, usize) {
-    let mut open_set = BinaryHeap::<Board>::new();
-    open_set.push(board.clone());
+// fn _astar(board: &Board) -> (Board, usize) {
+//     let mut open_set = BinaryHeap::<Board>::new();
+//     open_set.push(board.clone());
 
-    let mut visited: AHashSet<[[char; 6]; 6]> = AHashSet::new();
-    visited.insert(board.board_chars);
+//     let mut visited: AHashSet<[[char; 6]; 6]> = AHashSet::new();
+//     visited.insert(board.board_chars);
 
-    while let Some(current) = open_set.pop() {
-        for neighbour in current.get_moves() {
+//     while let Some(current) = open_set.pop() {
+//         for neighbour in current.get_moves() {
             
-            if !visited.contains(&neighbour.board_chars) {
-                if neighbour.is_solved() {
-                    return (neighbour, visited.len());
-                }
+//             if !visited.contains(&neighbour.board_chars) {
+//                 if neighbour.is_solved() {
+//                     return (neighbour, visited.len());
+//                 }
 
-                visited.insert(neighbour.board_chars);
-                open_set.push(neighbour.clone())
-            }
-        }
-    }
-    panic!("at the astarsco")
-}
+//                 visited.insert(neighbour.board_chars);
+//                 open_set.push(neighbour.clone())
+//             }
+//         }
+//     }
+//     panic!("at the astarsco")
+// }
