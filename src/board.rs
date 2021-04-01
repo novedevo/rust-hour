@@ -8,7 +8,7 @@ use std::{
     hash::{Hash, Hasher},
 };
 
-#[derive(PartialEq, Eq, Clone, Debug, Copy)]
+#[derive(Clone, Debug, Copy)]
 struct Car {
     vertical: bool,
     length: i32,
