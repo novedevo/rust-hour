@@ -15,7 +15,7 @@ Looking online, some other people have done this before. This person solved ever
 
 I checked the number of stored states contained in visited for each board. Depending on the algorithm and some internal structure, this varied from a few hundred to a few thousand. Again, not very many for a fast computer to traverse.
 
-One performance optimization I made is to only store the char array representation of the board in the hashmap, reducing calls to `Board.clone()` by ~100k per run. This helped significantly.
+One performance optimization I made is to only store the char array representation of the board in the hashmap, reducing calls to `Board.clone()` by ~100k per run. This helped significantly. Another was to store the `char`s as `byte`s, instead of the default Rust `char`, which is actually multiple bytes long, for Unicode storage.
 
 The fastest I have seen is using plain DFS with a `Vec` operating as a stack, without calculating any heuristics whatsoever, using `unsafe` Rust and the mutate-`clone`-unmutate move generator, variable-length moves, using SSE optimizations. This did 100 iterations of all 35 test boards within 0.56 seconds.
 
