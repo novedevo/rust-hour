@@ -17,7 +17,7 @@ I checked the number of stored states contained in visited for each board. Depen
 
 One performance optimization I made is to only store the char array representation of the board in the hashmap, reducing calls to `Board.clone()` by ~100k per run. This helped significantly.
 
-The fastest I have seen is using plain DFS with a `Vec` operating as a stack, without calculating any heuristics whatsoever, using `unsafe` Rust and the mutate-`clone`-unmutate move generator, variable-length moves. This did 100 iterations of all 35 test boards within 0.91 seconds.
+The fastest I have seen is using plain DFS with a `Vec` operating as a stack, without calculating any heuristics whatsoever, using `unsafe` Rust and the mutate-`clone`-unmutate move generator, variable-length moves, using SSE optimizations. This did 100 iterations of all 35 test boards within 0.76 seconds.
 
 When using `map()` instead of `unsafe` Rust, the time is in the 1.40 range, and up to 1.55.
 Using A* and calculating heuristics, the time is nearly doubled, in the mid 2-second range. Checking this with `valgrind`, I noticed that roughly the same number of nodes are added to the visited hashset, but more than double the number of calls to `get_moves()` and `.contains()`. This tracks with an inferior algorithm. 

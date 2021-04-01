@@ -1,6 +1,7 @@
 // use std::cmp::Ordering; //, convert::TryInto, rc::Rc};
 
-use ahash::AHashSet;
+// use ahash::AHashSet;
+use rustc_hash::FxHashSet;
 use std::fmt;
 use std::{
     fmt::Display,
@@ -71,7 +72,7 @@ impl Board {
         let board_string =
             std::fs::read_to_string(board_path).expect("Error: could not read file. Panicking!");
         let mut cars: Vec<Car> = Vec::with_capacity(15); //largest board in test suite has only 15 colours / cars
-        let mut colours: AHashSet<char> = AHashSet::with_capacity(15); //so we reserve that amount
+        let mut colours: FxHashSet<char> = FxHashSet::default(); //so we reserve that amount
         colours.insert('.');
         let chars = str_to_chars(&board_string);
         for (y, line) in board_string.lines().enumerate() {

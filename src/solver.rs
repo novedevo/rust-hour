@@ -1,5 +1,5 @@
-use ahash::AHashSet; //10x faster than the default at the expense of some cryptographic defenses
-
+// use ahash::AHashSet; //10x faster than the default at the expense of some cryptographic defenses
+use rustc_hash::FxHashSet;
 use crate::board::Board;
 
 use std::io::BufWriter;
@@ -25,7 +25,8 @@ pub fn stress_solve(board: Board) {
 //dfs is twice as fast as bfs.
 //A* is in between.
 fn dfs(board: Board) -> Board {
-    let mut visited: AHashSet<[[char; 6]; 6]> = AHashSet::with_capacity(10000); //keep track of all the nodes we have visited to avoid backtracking
+    let mut visited: FxHashSet<[[char; 6]; 6]> = FxHashSet::default(); //keep track of all the nodes we have visited to avoid backtracking
+    visited.reserve(5000);
     visited.insert(board.board_chars);
 
     let mut stack: Vec<Board> = vec![board]; //keep track of all the nodes we know exist, but have yet to visit
