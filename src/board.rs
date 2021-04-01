@@ -226,9 +226,9 @@ fn str_to_chars(board_string: &str) -> [[char; 6]; 6] {
     let mut seperated_board = board_string.lines();
 
     for row in &mut char_array{
-        let mut line: Vec<char> = seperated_board.next().unwrap().chars().collect();
-        for x in 0..6 {
-            row[5 - x] = line.pop().unwrap();
+        let mut line = seperated_board.next().unwrap().chars();
+        for x in row {
+            *x = line.next().unwrap();
         }
     }
 
