@@ -11,14 +11,14 @@ use std::{
 #[derive(Clone, Debug, Copy)]
 struct Car {
     vertical: bool,
-    length: i32,
+    length: u8,
     colour: u8,
-    x: i32,
-    y: i32,
+    x: u8,
+    y: u8,
 }
 
 impl Car {
-    pub fn new(vertical: bool, length: i32, colour: u8, x: i32, y: i32) -> Self {
+    pub fn new(vertical: bool, length: u8, colour: u8, x: u8, y: u8) -> Self {
         Car {
             vertical,
             length,
@@ -80,8 +80,8 @@ impl Board {
                         Self::is_vertical(u8s, x, y),
                         Self::get_length(u8s, x, y),
                         *tile,
-                        x as i32,
-                        y as i32,
+                        x as u8,
+                        y as u8,
                     ));
                 }
             }
@@ -122,7 +122,7 @@ impl Board {
         y < 5 && board_string[y][x] == board_string[y + 1][x]
     }
 
-    fn get_length(board_string: [[u8; 6]; 6], x: usize, y: usize) -> i32 {
+    fn get_length(board_string: [[u8; 6]; 6], x: usize, y: usize) -> u8 {
         let colour = board_string[y][x];
         if Self::is_vertical(board_string, x, y) {
             if y < 4 && board_string[y + 2][x] == colour {
@@ -137,10 +137,11 @@ impl Board {
         }
     }
 
-    pub fn get_moves(&mut self) -> Vec<Self> {
-        let mut carses = Vec::with_capacity(20);
+    //hot path. Calculates all adjacent paths
+    pub fn get_moves(&mut self) -> impl Iterator<Item = Board>{
+        let mut carses = Vec::with_capacity(20); //vec of vec of cars, thus carses
 
-        let cars = &mut self.cars as *mut Vec<Car>;
+        let cars = &mut self.cars as *mut Vec<Car>; //create raw mutable pointer
 
         // I think this is completely safe, actually. I never do anything too weird with memory.
         // the only reason I need unsafe is to replicate basically these lines of code:
@@ -149,16 +150,19 @@ impl Board {
         // car.x -= 1;
         unsafe {
             for car in &mut *cars {
+                //dereference raw mutable pointer (unsafe)
                 if !car.vertical {
                     for i in 1..5 {
-                        if car.x - i >= 0
+                        //because moving multiple steps is still a single move
+                        if car.x >= i //check bounds
                             && self.board_u8s[car.y as usize][(car.x - i) as usize] == b'.'
+                        //check that there is space
                         {
-                            car.x -= i;
-                            carses.push((*cars).clone());
-                            car.x += i;
+                            car.x -= i; //move the car left one space
+                            carses.push((*cars).clone()); //copy the list of cars
+                            car.x += i; //replace the car to its original position
                         } else {
-                            break;
+                            break; //to prevent phasing through thin cars
                         }
                     }
                     for i in 1..5 {
@@ -174,8 +178,9 @@ impl Board {
                         }
                     }
                 } else {
+                    //car is vertical
                     for i in 1..5 {
-                        if car.y - i >= 0
+                        if car.y >= i
                             && self.board_u8s[(car.y - i) as usize][car.x as usize] == b'.'
                         {
                             car.y -= i;
@@ -201,9 +206,10 @@ impl Board {
             }
         }
 
-        carses.into_iter().map(Self::from_cars).collect()
+        carses.into_iter().map(Self::from_cars) //convert vec of vecs of cars into iterator of boards
     }
 
+    //fairly self-explanatory, I would imagine
     pub fn is_solved(&self) -> bool {
         for car in &self.cars {
             if car.is_victorious() {
@@ -214,16 +220,17 @@ impl Board {
     }
 }
 
+//converts a 6-line string of 6 characters each, properly formatted, into a 6x6 array of bytes
 fn str_to_u8s(board_string: &str) -> [[u8; 6]; 6] {
-    let mut u8_array = [[b'0'; 6]; 6];
+    let mut u8_array = [[b'0'; 6]; 6]; //initialize
     let mut seperated_board = board_string.lines();
 
     for row in &mut u8_array {
         *row = seperated_board
-            .next()
-            .unwrap()
-            .as_bytes()
-            .try_into()
+            .next() //get next line
+            .expect("Invalid board: not enough lines") 
+            .as_bytes() //convert to ascii bytes
+            .try_into() //attempt to convert from slice to 6-long array
             .expect("Invalid board");
     }
 

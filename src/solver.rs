@@ -44,5 +44,5 @@ fn dfs(board: Board) -> Board {
         }
     }
 
-    panic!("No solution exists.");
+    unreachable!("No solution exists.");
 }
