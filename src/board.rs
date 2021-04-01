@@ -2,7 +2,7 @@
 
 // use ahash::AHashSet;
 use rustc_hash::FxHashSet;
-use std::fmt;
+use std::{convert::TryInto, fmt::{self, Write, write}};
 use std::{
     fmt::Display,
     hash::{Hash, Hasher},
@@ -12,13 +12,13 @@ use std::{
 struct Car {
     vertical: bool,
     length: i32,
-    colour: char,
+    colour: u8,
     x: i32,
     y: i32,
 }
 
 impl Car {
-    pub fn new(vertical: bool, length: i32, colour: char, x: i32, y: i32) -> Self {
+    pub fn new(vertical: bool, length: i32, colour: u8, x: i32, y: i32) -> Self {
         Car {
             vertical,
             length,
@@ -28,19 +28,19 @@ impl Car {
         }
     }
     pub fn is_victorious(&self) -> bool {
-        self.colour == 'X' && self.x >= 4
+        self.colour == b'X' && self.x >= 4
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct Board {
     cars: Vec<Car>,
-    pub board_chars: [[char; 6]; 6],
+    pub board_u8s: [[u8; 6]; 6],
 }
 
 impl PartialEq for Board {
     fn eq(&self, other: &Self) -> bool {
-        self.board_chars == other.board_chars
+        self.board_u8s == other.board_u8s
     }
 }
 
@@ -48,22 +48,23 @@ impl Eq for Board {}
 
 impl Hash for Board {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.board_chars.hash(state)
+        self.board_u8s.hash(state)
     }
 }
 
 impl Display for Board {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", {
-            let mut acc = Vec::with_capacity(45);
-            for line in &self.board_chars {
+            // let mut acc = Vec::with_capacity(45);
+            for line in &self.board_u8s {
                 for c in line {
-                    acc.push(*c);
+                    f.write_char(*c as char);
+                    // acc.push(*c);
                 }
-                acc.push('\n')
+                f.write_char('\n');
+                // acc.push(b'\n')
             }
-            acc.into_iter().collect::<String>()
-        })
+            // acc.into_iter().collect::<String>()
+            Ok(())
     }
 }
 
@@ -72,17 +73,17 @@ impl Board {
         let board_string =
             std::fs::read_to_string(board_path).expect("Error: could not read file. Panicking!");
         let mut cars: Vec<Car> = Vec::with_capacity(15); //largest board in test suite has only 15 colours / cars
-        let mut colours: FxHashSet<char> = FxHashSet::default(); //so we reserve that amount
-        colours.insert('.');
-        let chars = str_to_chars(&board_string);
+        let mut colours: FxHashSet<u8> = FxHashSet::default(); //so we reserve that amount
+        colours.insert(b'.');
+        let u8s = str_to_u8s(&board_string);
         for (y, line) in board_string.lines().enumerate() {
-            for (x, tile) in line.chars().enumerate() {
-                if !colours.contains(&tile) {
-                    colours.insert(tile);
+            for (x, tile) in line.as_bytes().iter().enumerate() {
+                if !colours.contains(tile) {
+                    colours.insert(*tile);
                     cars.push(Car::new(
-                        Self::is_vertical(chars, x, y),
-                        Self::get_length(chars, x, y),
-                        tile,
+                        Self::is_vertical(u8s, x, y),
+                        Self::get_length(u8s, x, y),
+                        *tile,
                         x as i32,
                         y as i32,
                     ));
@@ -91,20 +92,20 @@ impl Board {
         }
         Board {
             cars,
-            board_chars: chars,
+            board_u8s: u8s,
         }
     }
 
     fn from_cars(cars: Vec<Car>) -> Self {
-        let chars = Self::gen_chars(&cars);
+        let u8s = Self::gen_u8s(&cars);
         Board {
-            board_chars: chars,
+            board_u8s: u8s,
             cars,
         }
     }
 
-    fn gen_chars(cars: &[Car]) -> [[char; 6]; 6] {
-        let mut retval = [['.'; 6]; 6];
+    fn gen_u8s(cars: &[Car]) -> [[u8; 6]; 6] {
+        let mut retval = [[b'.'; 6]; 6];
 
         for car in cars {
             if car.vertical {
@@ -121,11 +122,11 @@ impl Board {
         retval
     }
 
-    fn is_vertical(board_string: [[char; 6]; 6], x: usize, y: usize) -> bool {
+    fn is_vertical(board_string: [[u8; 6]; 6], x: usize, y: usize) -> bool {
         y < 5 && board_string[y][x] == board_string[y + 1][x]
     }
 
-    fn get_length(board_string: [[char; 6]; 6], x: usize, y: usize) -> i32 {
+    fn get_length(board_string: [[u8; 6]; 6], x: usize, y: usize) -> i32 {
         let colour = board_string[y][x];
         if Self::is_vertical(board_string, x, y) {
             if y < 4 && board_string[y + 2][x] == colour {
@@ -155,7 +156,7 @@ impl Board {
                 if !car.vertical {
                     for i in 1..5 {
                         if car.x - i >= 0
-                            && self.board_chars[car.y as usize][(car.x - i) as usize] == '.'
+                            && self.board_u8s[car.y as usize][(car.x - i) as usize] == b'.'
                         {
                             car.x -= i;
                             let new_board = Board::from_cars((*cars).clone());
@@ -167,8 +168,8 @@ impl Board {
                     }
                     for i in 1..5 {
                         if car.x + car.length + i < 6
-                            && self.board_chars[car.y as usize][(car.x + car.length + i) as usize]
-                                == '.'
+                            && self.board_u8s[car.y as usize][(car.x + car.length + i) as usize]
+                                == b'.'
                         {
                             car.x += i;
                             let new_board = Board::from_cars((*cars).clone());
@@ -181,7 +182,7 @@ impl Board {
                 } else {
                     for i in 1..5 {
                         if car.y - i >= 0
-                            && self.board_chars[(car.y - i) as usize][car.x as usize] == '.'
+                            && self.board_u8s[(car.y - i) as usize][car.x as usize] == b'.'
                         {
                             car.y -= i;
                             let new_board = Board::from_cars((*cars).clone());
@@ -193,8 +194,8 @@ impl Board {
                     }
                     for i in 1..5 {
                         if car.y + car.length + i < 6
-                            && self.board_chars[(car.y + car.length + i) as usize][car.x as usize]
-                                == '.'
+                            && self.board_u8s[(car.y + car.length + i) as usize][car.x as usize]
+                                == b'.'
                         {
                             car.y += i;
                             let new_board = Board::from_cars((*cars).clone());
@@ -221,16 +222,18 @@ impl Board {
     }
 }
 
-fn str_to_chars(board_string: &str) -> [[char; 6]; 6] {
-    let mut char_array = [['0'; 6]; 6];
+fn str_to_u8s(board_string: &str) -> [[u8; 6]; 6] {
+    let mut u8_array = [[b'0'; 6]; 6];
     let mut seperated_board = board_string.lines();
 
-    for row in &mut char_array{
-        let mut line = seperated_board.next().unwrap().chars();
-        for x in row {
-            *x = line.next().unwrap();
-        }
+    for row in &mut u8_array {
+        *row = seperated_board
+            .next()
+            .unwrap()
+            .as_bytes()
+            .try_into()
+            .expect("Invalid board");
     }
 
-    char_array
+    u8_array
 }

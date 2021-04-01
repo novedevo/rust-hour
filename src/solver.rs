@@ -25,9 +25,9 @@ pub fn stress_solve(board: Board) {
 //dfs is twice as fast as bfs.
 //A* is in between.
 fn dfs(board: Board) -> Board {
-    let mut visited: FxHashSet<[[char; 6]; 6]> = FxHashSet::default(); //keep track of all the nodes we have visited to avoid backtracking
+    let mut visited: FxHashSet<[[u8; 6]; 6]> = FxHashSet::default(); //keep track of all the nodes we have visited to avoid backtracking
     visited.reserve(5000);
-    visited.insert(board.board_chars);
+    visited.insert(board.board_u8s);
 
     let mut stack: Vec<Board> = vec![board]; //keep track of all the nodes we know exist, but have yet to visit
                                              //stack ensures that we are using depth-first search, which we found to be the fastest algorithm
@@ -37,8 +37,8 @@ fn dfs(board: Board) -> Board {
         for new_board in board.get_moves() {
             if new_board.is_solved() {
                 return new_board;
-            } else if !visited.contains(&new_board.board_chars) {
-                visited.insert(new_board.board_chars);
+            } else if !visited.contains(&new_board.board_u8s) {
+                visited.insert(new_board.board_u8s);
                 stack.push(new_board);
             }
         }
