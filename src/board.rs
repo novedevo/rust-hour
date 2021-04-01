@@ -1,8 +1,11 @@
 // use std::cmp::Ordering; //, convert::TryInto, rc::Rc};
 
 use ahash::AHashSet;
-use std::{fmt::Display, hash::{Hash, Hasher}};
 use std::fmt;
+use std::{
+    fmt::Display,
+    hash::{Hash, Hasher},
+};
 
 #[derive(PartialEq, Eq, Clone, Debug, Copy)]
 struct Car {
@@ -50,13 +53,23 @@ impl Hash for Board {
 
 impl Display for Board {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.to_string())
+        write!(f, "{}", {
+            let mut acc = Vec::with_capacity(45);
+            for line in &self.board_chars {
+                for c in line {
+                    acc.push(*c);
+                }
+                acc.push('\n')
+            }
+            acc.into_iter().collect::<String>()
+        })
     }
 }
 
 impl Board {
-    pub fn from_str(board_path: &str) -> Self {
-        let board_string = std::fs::read_to_string(board_path).expect("Error: could not read file. Panicking!");
+    pub fn from_path(board_path: &str) -> Self {
+        let board_string =
+            std::fs::read_to_string(board_path).expect("Error: could not read file. Panicking!");
         let mut cars: Vec<Car> = Vec::with_capacity(15); //largest board in test suite has only 15 colours / cars
         let mut colours: AHashSet<char> = AHashSet::with_capacity(15); //so we reserve that amount
         colours.insert('.');
@@ -119,12 +132,10 @@ impl Board {
             } else {
                 1
             }
+        } else if x < 4 && board_string[y][x + 2] == colour {
+            2
         } else {
-            if x < 4 && board_string[y][x + 2] == colour {
-                2
-            } else {
-                1
-            }
+            1
         }
     }
 
@@ -207,27 +218,16 @@ impl Board {
         }
         false
     }
-    
-    fn to_string(&self) -> String {
-        let mut acc = Vec::with_capacity(45);
-        for line in self.board_chars.iter() {
-            for c in line {
-                acc.push(*c);
-            }
-            acc.push('\n')
-        }
-        acc.into_iter().collect()
-    }
 }
 
 fn str_to_chars(board_string: &str) -> [[char; 6]; 6] {
     let mut char_array = [['0'; 6]; 6];
     let mut seperated_board = board_string.lines();
 
-    for y in 0..6 {
+    for row in &mut char_array{
         let mut line: Vec<char> = seperated_board.next().unwrap().chars().collect();
         for x in 0..6 {
-            char_array[y][5 - x] = line.pop().unwrap();
+            row[5 - x] = line.pop().unwrap();
         }
     }
 

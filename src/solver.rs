@@ -6,7 +6,7 @@ use std::io::BufWriter;
 use std::{fs::File, io::Write, path::Path};
 
 pub fn solve(input_path: &str, output_path: &str) {
-    let board = Board::from_str(input_path);
+    let board = Board::from_path(input_path);
 
     let output_path = Path::new(output_path);
     let out_file =
@@ -28,10 +28,9 @@ fn dfs(board: Board) -> Board {
     let mut visited: AHashSet<[[char; 6]; 6]> = AHashSet::with_capacity(10000); //keep track of all the nodes we have visited to avoid backtracking
     visited.insert(board.board_chars);
 
-    let mut stack: Vec<Board> = vec![]; //keep track of all the nodes we know exist, but have yet to visit
-                                        //stack ensures that we are using depth-first search, which we found to be the fastest algorithm
-                                        // preallocating space is actually slower here, regardless of how much we allocate
-    stack.push(board);
+    let mut stack: Vec<Board> = vec![board]; //keep track of all the nodes we know exist, but have yet to visit
+                                             //stack ensures that we are using depth-first search, which we found to be the fastest algorithm
+                                             // preallocating space is actually slower here, regardless of how much we allocate
 
     while let Some(mut board) = stack.pop() {
         for new_board in board.get_moves() {

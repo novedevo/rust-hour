@@ -9,7 +9,11 @@ edition = "2018"
 [dependencies]
 ahash = "0.7"
 
-# [profile.release]
+[profile.release]
+opt-level = 3
+# codegen-units = 1
+lto = "fat"
+panic = "abort"
 # debug = true
 
 # [profile.dev]
