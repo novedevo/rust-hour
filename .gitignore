@@ -2,4 +2,4 @@
 solutions/*
 callgrind.*
 perf.*
-flamegraph.svg
+flamegraph*

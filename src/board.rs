@@ -2,9 +2,9 @@
 
 // use ahash::AHashSet;
 use rustc_hash::FxHashSet;
-use std::{convert::TryInto, fmt::{self, Write, write}};
 use std::{
-    fmt::Display,
+    convert::TryInto,
+    fmt::{self, Display, Write},
     hash::{Hash, Hasher},
 };
 
@@ -54,17 +54,13 @@ impl Hash for Board {
 
 impl Display for Board {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            // let mut acc = Vec::with_capacity(45);
-            for line in &self.board_u8s {
-                for c in line {
-                    f.write_char(*c as char);
-                    // acc.push(*c);
-                }
-                f.write_char('\n');
-                // acc.push(b'\n')
+        for line in &self.board_u8s {
+            for c in line {
+                f.write_char(*c as char)?;
             }
-            // acc.into_iter().collect::<String>()
-            Ok(())
+            f.write_char('\n')?;
+        }
+        Ok(())
     }
 }
 
@@ -142,7 +138,7 @@ impl Board {
     }
 
     pub fn get_moves(&mut self) -> Vec<Self> {
-        let mut moves = Vec::with_capacity(20);
+        let mut carses = Vec::with_capacity(20);
 
         let cars = &mut self.cars as *mut Vec<Car>;
 
@@ -159,8 +155,7 @@ impl Board {
                             && self.board_u8s[car.y as usize][(car.x - i) as usize] == b'.'
                         {
                             car.x -= i;
-                            let new_board = Board::from_cars((*cars).clone());
-                            moves.push(new_board);
+                            carses.push((*cars).clone());
                             car.x += i;
                         } else {
                             break;
@@ -172,8 +167,7 @@ impl Board {
                                 == b'.'
                         {
                             car.x += i;
-                            let new_board = Board::from_cars((*cars).clone());
-                            moves.push(new_board);
+                            carses.push((*cars).clone());
                             car.x -= i;
                         } else {
                             break;
@@ -185,8 +179,7 @@ impl Board {
                             && self.board_u8s[(car.y - i) as usize][car.x as usize] == b'.'
                         {
                             car.y -= i;
-                            let new_board = Board::from_cars((*cars).clone());
-                            moves.push(new_board);
+                            carses.push((*cars).clone());
                             car.y += i;
                         } else {
                             break;
@@ -198,8 +191,7 @@ impl Board {
                                 == b'.'
                         {
                             car.y += i;
-                            let new_board = Board::from_cars((*cars).clone());
-                            moves.push(new_board);
+                            carses.push((*cars).clone());
                             car.y -= i;
                         } else {
                             break;
@@ -209,7 +201,7 @@ impl Board {
             }
         }
 
-        moves
+        carses.into_iter().map(Self::from_cars).collect()
     }
 
     pub fn is_solved(&self) -> bool {

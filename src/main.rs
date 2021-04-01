@@ -14,6 +14,9 @@ fn main() {
         });
         threads.push(new_thread);
     }
+    
+    
+    solver::solve("puzzles/B19.txt", "solutions/B19.txt");
 
     for handle in threads {
         handle.join().unwrap();

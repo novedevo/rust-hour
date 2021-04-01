@@ -14,8 +14,7 @@ rustc-hash = "*"
 [profile.release]
 opt-level = 3
 lto = "fat"
-# panic = "abort"
-# debug = true
+debug = true
 
 # codegen-units = 1
 

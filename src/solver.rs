@@ -1,6 +1,6 @@
 // use ahash::AHashSet; //10x faster than the default at the expense of some cryptographic defenses
-use rustc_hash::FxHashSet;
 use crate::board::Board;
+use rustc_hash::FxHashSet;
 
 use std::io::BufWriter;
 use std::{fs::File, io::Write, path::Path};
