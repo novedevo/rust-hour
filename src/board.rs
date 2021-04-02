@@ -18,14 +18,14 @@ struct Car {
 #[derive(Clone)]
 pub struct Board {
     cars: Vec<Car>,
-    pub board_u8s: [[u8; 6]; 6],
+    pub array: [[u8; 6]; 6],
 }
 
 //to format the board into the files it should produce
 //not the most efficient way to do it, but this only happens once per board and takes nanoseconds, so it's fine
 impl Display for Board {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        for line in &self.board_u8s {
+        for line in &self.array {
             for c in line {
                 f.write_char(*c as char)?;
             }
@@ -65,10 +65,7 @@ impl Board {
             }
         }
 
-        Board {
-            cars,
-            board_u8s: u8s,
-        }
+        Board { cars, array: u8s }
     }
 
     //hot path. Calculates the 6x6 byte array delimited by the slice of Cars
@@ -139,7 +136,7 @@ impl Board {
                     for i in 1..5 {
                         //because moving multiple steps is still a single move
                         if car.x >= i //check bounds
-                            && self.board_u8s[car.y as usize][(car.x - i) as usize] == b'.'
+                            && self.array[car.y as usize][(car.x - i) as usize] == b'.'
                         //check that there is space
                         {
                             car.x -= i; //move the car left one space
@@ -151,7 +148,7 @@ impl Board {
                     }
                     for i in 1..5 {
                         if car.x + length + i < 6
-                            && self.board_u8s[car.y as usize][(car.x + length + i) as usize] == b'.'
+                            && self.array[car.y as usize][(car.x + length + i) as usize] == b'.'
                         {
                             car.x += i;
                             carses.push((*cars).clone());
@@ -163,9 +160,7 @@ impl Board {
                 } else {
                     //car is vertical
                     for i in 1..5 {
-                        if car.y >= i
-                            && self.board_u8s[(car.y - i) as usize][car.x as usize] == b'.'
-                        {
+                        if car.y >= i && self.array[(car.y - i) as usize][car.x as usize] == b'.' {
                             car.y -= i;
                             carses.push((*cars).clone());
                             car.y += i;
@@ -175,7 +170,7 @@ impl Board {
                     }
                     for i in 1..5 {
                         if car.y + length + i < 6
-                            && self.board_u8s[(car.y + length + i) as usize][car.x as usize] == b'.'
+                            && self.array[(car.y + length + i) as usize][car.x as usize] == b'.'
                         {
                             car.y += i;
                             carses.push((*cars).clone());
@@ -189,14 +184,14 @@ impl Board {
         }
 
         carses.into_iter().map(|cars| Board {
-            board_u8s: Self::gen_u8s(&cars),
+            array: Self::gen_u8s(&cars),
             cars,
         }) //convert vec of vecs of cars into iterator of boards
     }
 
     //fairly self-explanatory, I would imagine
     pub fn is_solved(&self) -> bool {
-        self.board_u8s[2][5] == b'X'
+        self.array[2][5] == b'X'
     }
 }
 
