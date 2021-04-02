@@ -21,22 +21,9 @@ pub struct Board {
     pub array: [[u8; 6]; 6],
 }
 
-//to format the board into the files it should produce
-//not the most efficient way to do it, but this only happens once per board and takes nanoseconds, so it's fine
-impl Display for Board {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        for line in &self.array {
-            for c in line {
-                f.write_char(*c as char)?;
-            }
-            f.write_char('\n')?;
-        }
-        Ok(())
-    }
-}
-
 //associated functions
 impl Board {
+    //allegedly a constructor
     //generate board from a path to a file
     //assumed to be a valid board. Providing an invalid board is UB. Panics when file is invalid
     pub fn from_path(board_path: &str) -> Self {
@@ -93,7 +80,7 @@ impl Board {
         retval
     }
 
-    //fairly self-explanatory, imo
+    //fairly self-explanatory
     // tests one position to determine if the car is vertical or not
     // assumes correct board.
     const fn is_vertical(board_string: [[u8; 6]; 6], x: usize, y: usize) -> bool {
@@ -112,6 +99,8 @@ impl Board {
     }
 
     //hot path. Calculates all adjacent board states.
+    //this is only interior mutability. this could still be immutable externally, but that requires another allocation,
+    //and considering how many times this function is called, I'd rather avoid that.
     pub fn get_moves(&mut self) -> impl Iterator<Item = Board> {
         let mut carses = Vec::with_capacity(20); //vec of vec of cars, thus carses
 
@@ -197,6 +186,20 @@ impl Board {
     //fairly self-explanatory, I would imagine
     pub fn is_solved(&self) -> bool {
         self.array[2][5] == b'X'
+    }
+}
+
+//to format the board into the files it should produce
+//not the most efficient way to do it, but this only happens once per board and takes nanoseconds, so it's fine
+impl Display for Board {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        for line in &self.array {
+            for c in line {
+                f.write_char(*c as char)?;
+            }
+            f.write_char('\n')?;
+        }
+        Ok(())
     }
 }
 

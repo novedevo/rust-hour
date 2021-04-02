@@ -1,21 +1,27 @@
-// use ahash::AHashSet; //10x faster than the default at the expense of some cryptographic defenses
-use crate::board::Board;
-use rustc_hash::FxHashSet;
+use crate::board::Board; //need to use our board!
+use rustc_hash::FxHashSet; //10x faster than the default at the expense of some cryptographic defenses
 
-use std::io::BufWriter;
-use std::{fs::File, io::Write, path::Path};
+use std::io::BufWriter; //efficient writing to files
+use std::{fs::File, io::Write, path::Path}; //filesystem nonsense
 
+//The Function(tm) that the assignment wants. Takes two paths, input file in the first and output file in the second.
+//does what it says on the tin
 pub fn solve(input_path: &str, output_path: &str) {
     let board = Board::from_path(input_path);
 
-    let output_path = Path::new(output_path);
-    let out_file =
-        File::create(output_path).expect("Could not create file. Does the parent folder exist?");
-    let mut out_file = BufWriter::new(out_file);
+    // let output_path = Path::new(output_path);
+    // let out_file = ;
+    let mut out_file = BufWriter::new(
+        File::create(Path::new(output_path))
+            .expect("Could not create file. Does the parent folder exist?"),
+    );
     write!(out_file, "{}", dfs(board)).expect("Error writing output buffer.");
     out_file.flush().expect("Error flushing output buffer");
 }
 
+//used for benchmarking, etc
+//solves the given board 100x before returning
+//theoretically, rustc could optimize this out since it has no effects, but it seems that it doesn't
 pub fn stress_solve(board: Board) {
     for _ in 0..100 {
         dfs(board.clone());
