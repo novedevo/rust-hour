@@ -1,5 +1,4 @@
 /target
-solutions/*
 callgrind.*
 perf.*
 flamegraph*

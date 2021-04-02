@@ -5,13 +5,12 @@ pub mod solver;
 mod tests {
     use super::board::Board;
     use super::solver;
-    use std::thread;
 
     #[test]
     fn bench() {
         let mut threads = vec![];
         for entry in std::fs::read_dir("puzzles").unwrap() {
-            let new_thread = thread::spawn(|| {
+            let new_thread = std::thread::spawn(|| {
                 let entry = entry.unwrap();
                 let a = Board::from_path(entry.path().to_str().unwrap());
                 solver::stress_solve(a);
@@ -25,7 +24,8 @@ mod tests {
     }
     
     #[test]
-    fn solve() {
+    fn solo_solve() {
+        std::fs::create_dir_all("solutions").unwrap();
         solver::solve("puzzles/B19.txt", "solutions/B19.txt");
     }
 }
