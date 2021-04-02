@@ -93,6 +93,9 @@ impl Board {
         retval
     }
 
+    //fairly self-explanatory, imo
+    // tests one position to determine if the car is vertical or not
+    // assumes correct board.
     const fn is_vertical(board_string: [[u8; 6]; 6], x: usize, y: usize) -> bool {
         y < 5 && board_string[y][x] == board_string[y + 1][x]
     }
@@ -140,7 +143,9 @@ impl Board {
                         //check that there is space
                         {
                             car.x -= i; //move the car left one space
-                            carses.push((*cars).clone()); //copy the list of cars
+                            carses.push((*cars).clone()); //copy the list of cars. this dereferences our pointer again, which is unsafe.
+                                                          //we now have a mutable reference and an immutable reference existing at the same time,
+                                                          //which is a recipe for disaster and rustc will refuse to compile it without using raw pointers like this
                             car.x += i; //replace the car to its original position
                         } else {
                             break; //to prevent phasing through thin cars
@@ -186,7 +191,7 @@ impl Board {
         carses.into_iter().map(|cars| Board {
             array: Self::gen_u8s(&cars),
             cars,
-        }) //convert vec of vecs of cars into iterator of boards
+        }) //convert vec of vecs of cars into lazy iterator of boards
     }
 
     //fairly self-explanatory, I would imagine
