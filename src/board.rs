@@ -14,7 +14,8 @@ struct Car {
     y: u8,
 }
 
-//I wish we could derive Copy. Vectors are stored on the heap, and using arrays allocates way too much memory and slows it down anyway
+// I wish we could derive Copy. Vectors are stored on the heap, and using arrays allocates way too much memory and slows it down anyway
+// allocating and dropping all these vectors is the slowest part of the program.
 #[derive(Clone)]
 pub struct Board {
     cars: Vec<Car>,
@@ -107,7 +108,7 @@ impl Board {
     //this is only interior mutability. this could still be immutable externally, but that requires another allocation,
     //and considering how many times this function is called, I'd rather avoid that.
     pub fn get_moves(&mut self) -> impl Iterator<Item = Board> {
-        let mut carses = Vec::with_capacity(20); //vec of vec of cars, thus carses
+        let mut carses = Vec::with_capacity(20); //vec of vec of cars (and their associated movement trails), thus carses
 
         let cars = &mut self.cars as *mut Vec<Car>; //create raw mutable pointer
 
@@ -136,16 +137,22 @@ impl Board {
                             && self.array[car.y as usize][(car.x - i) as usize] == b'.'
                         //check that there is space
                         {
-                            let turn = [car.colour, b'L', (i + 48).to_ascii_lowercase()];
-                            
-                            self.moves.push(turn);
-                            
+                            let turn = [car.colour, b'L', (i + 48).to_ascii_lowercase()]; // we want something of the format XR4 to signify car X, moving right, 4 units.
+                                                                                          // thus we use a 3-wide byte array with the car's colour, then which direction we are going as a byte,
+                                                                                          // then add 48 to our movement length to convert the integer into ascii digits
+
+                            self.moves.push(turn); //this modifies self.moves
+
                             car.x -= i; //move the car left one space
                             carses.push(((*cars).clone(), self.moves.clone())); //copy the list of cars. this dereferences our pointer again, which is unsafe.
-                                                                  //we now have a mutable reference and an immutable reference existing at the same time,
-                                                                  //which is a recipe for disaster and rustc will refuse to compile it without using raw pointers like this
+                                                                                //we now have a mutable reference and an immutable reference existing at the same time,
+                                                                                //which is a recipe for disaster and rustc will refuse to compile it without using raw pointers like this
+                                                                                //
+                                                                                //this also clones the list of moves (including our most recent move), which is slightly less illegal
+                                                                                //because we only have one reference at any given time
+
                             car.x += i; //replace the car to its original position
-                            self.moves.pop();
+                            self.moves.pop(); //return self.moves to its original state
                         } else {
                             break; //to prevent phasing through thin cars
                         }
@@ -195,16 +202,12 @@ impl Board {
                 }
             }
         }
-        
-        
 
-        carses.into_iter().map(|(cars, turns)| {
-            Board {
-                array: Self::gen_u8s(&cars),
-                cars,
-                moves: turns
-            }
-        })//convert vec of vecs of cars into lazy iterator of boards
+        carses.into_iter().map(|(cars, turns)| Board {
+            array: Self::gen_u8s(&cars),
+            cars,
+            moves: turns,
+        }) //convert vec of vecs of cars and vecs of arrays of bytes into lazy iterator of boards
     }
 
     //fairly self-explanatory, I would imagine
@@ -236,7 +239,7 @@ fn str_to_u8s(board_string: String) -> [[u8; 6]; 6] {
         *row = seperated_board
             .next() //get next line
             .expect("Invalid board: not enough lines")
-            .as_bytes() //convert to ascii bytes
+            .as_bytes() //convert to ascii bytes //me want byte, me want ascii char delight
             .try_into() //attempt to convert from slice to 6-long array
             .expect("Invalid board");
     }
