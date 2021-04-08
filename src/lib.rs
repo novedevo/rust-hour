@@ -10,19 +10,16 @@ mod tests {
     fn bench() {
         let mut threads = vec![];
         for entry in std::fs::read_dir("puzzles").unwrap() {
-            let new_thread = std::thread::spawn(|| {
-                let entry = entry.unwrap();
-                let a = Board::from_path(entry.path().to_str().unwrap());
-                solver::stress_solve(a);
-            });
-            threads.push(new_thread);
+            threads.push(std::thread::spawn(|| {
+                solver::stress_solve(Board::from_path(entry.unwrap().path().to_str().unwrap()));
+            }));
         }
 
         for handle in threads {
             handle.join().unwrap();
         }
     }
-    
+
     #[test]
     fn solo_solve() {
         std::fs::create_dir_all("solutions").unwrap();

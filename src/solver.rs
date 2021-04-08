@@ -9,8 +9,6 @@ use std::{fs::File, io::Write, path::Path}; //filesystem nonsense
 pub fn solve(input_path: &str, output_path: &str) {
     let board = Board::from_path(input_path);
 
-    // let output_path = Path::new(output_path);
-    // let out_file = ;
     let mut out_file = BufWriter::new(
         File::create(Path::new(output_path))
             .expect("Could not create file. Does the parent folder exist?"),
