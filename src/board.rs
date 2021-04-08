@@ -19,6 +19,7 @@ struct Car {
 pub struct Board {
     cars: Vec<Car>,
     pub array: [[u8; 6]; 6],
+    moves: Vec<[u8; 3]>,
 }
 
 //associated functions
@@ -52,7 +53,11 @@ impl Board {
             }
         }
 
-        Board { cars, array: u8s }
+        Board {
+            cars,
+            array: u8s,
+            moves: vec![],
+        }
     }
 
     //hot path. Calculates the 6x6 byte array delimited by the slice of Cars
@@ -131,11 +136,16 @@ impl Board {
                             && self.array[car.y as usize][(car.x - i) as usize] == b'.'
                         //check that there is space
                         {
+                            let turn = [car.colour, b'L', (i + 48).to_ascii_lowercase()];
+                            
+                            self.moves.push(turn);
+                            
                             car.x -= i; //move the car left one space
-                            carses.push((*cars).clone()); //copy the list of cars. this dereferences our pointer again, which is unsafe.
-                                                          //we now have a mutable reference and an immutable reference existing at the same time,
-                                                          //which is a recipe for disaster and rustc will refuse to compile it without using raw pointers like this
+                            carses.push(((*cars).clone(), self.moves.clone())); //copy the list of cars. this dereferences our pointer again, which is unsafe.
+                                                                  //we now have a mutable reference and an immutable reference existing at the same time,
+                                                                  //which is a recipe for disaster and rustc will refuse to compile it without using raw pointers like this
                             car.x += i; //replace the car to its original position
+                            self.moves.pop();
                         } else {
                             break; //to prevent phasing through thin cars
                         }
@@ -144,9 +154,12 @@ impl Board {
                         if car.x + length + i < 6
                             && self.array[car.y as usize][(car.x + length + i) as usize] == b'.'
                         {
+                            let turn = [car.colour, b'R', (i + 48).to_ascii_lowercase()];
+                            self.moves.push(turn);
                             car.x += i;
-                            carses.push((*cars).clone());
+                            carses.push(((*cars).clone(), self.moves.clone()));
                             car.x -= i;
+                            self.moves.pop();
                         } else {
                             break;
                         }
@@ -155,9 +168,12 @@ impl Board {
                     //car is vertical
                     for i in 1..5 {
                         if car.y >= i && self.array[(car.y - i) as usize][car.x as usize] == b'.' {
+                            let turn = [car.colour, b'U', (i + 48).to_ascii_lowercase()];
+                            self.moves.push(turn);
                             car.y -= i;
-                            carses.push((*cars).clone());
+                            carses.push(((*cars).clone(), self.moves.clone()));
                             car.y += i;
+                            self.moves.pop();
                         } else {
                             break;
                         }
@@ -166,9 +182,12 @@ impl Board {
                         if car.y + length + i < 6
                             && self.array[(car.y + length + i) as usize][car.x as usize] == b'.'
                         {
+                            let turn = [car.colour, b'D', (i + 48).to_ascii_lowercase()];
+                            self.moves.push(turn);
                             car.y += i;
-                            carses.push((*cars).clone());
+                            carses.push(((*cars).clone(), self.moves.clone()));
                             car.y -= i;
+                            self.moves.pop();
                         } else {
                             break;
                         }
@@ -176,11 +195,16 @@ impl Board {
                 }
             }
         }
+        
+        
 
-        carses.into_iter().map(|cars| Board {
-            array: Self::gen_u8s(&cars),
-            cars,
-        }) //convert vec of vecs of cars into lazy iterator of boards
+        carses.into_iter().map(|(cars, turns)| {
+            Board {
+                array: Self::gen_u8s(&cars),
+                cars,
+                moves: turns
+            }
+        })//convert vec of vecs of cars into lazy iterator of boards
     }
 
     //fairly self-explanatory, I would imagine
@@ -193,7 +217,7 @@ impl Board {
 //not the most efficient way to do it, but this only happens once per board and takes nanoseconds, so it's fine
 impl Display for Board {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        for line in &self.array {
+        for line in &self.moves {
             for c in line {
                 f.write_char(*c as char)?;
             }
