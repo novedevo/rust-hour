@@ -131,7 +131,9 @@ impl Board {
                 let length = if car.truck { 2 } else { 1 };
 
                 if !car.vertical {
-                    for i in 1..5 {
+                    let mut i = 0; 
+                    loop {
+                        i += 1;
                         //because moving multiple steps is still a single move
                         if car.x >= i //check bounds
                             && self.array[car.y as usize][(car.x - i) as usize] == b'.'
@@ -157,7 +159,9 @@ impl Board {
                             break; //to prevent phasing through thin cars
                         }
                     }
-                    for i in 1..5 {
+                    let mut i = 0; 
+                    loop {
+                        i += 1;
                         if car.x + length + i < 6
                             && self.array[car.y as usize][(car.x + length + i) as usize] == b'.'
                         {
@@ -173,7 +177,9 @@ impl Board {
                     }
                 } else {
                     //car is vertical
-                    for i in 1..5 {
+                    let mut i = 0; 
+                    loop {
+                        i += 1;
                         if car.y >= i && self.array[(car.y - i) as usize][car.x as usize] == b'.' {
                             let turn = [car.colour, b'U', (i + 48).to_ascii_lowercase()];
                             self.moves.push(turn);
@@ -185,7 +191,9 @@ impl Board {
                             break;
                         }
                     }
-                    for i in 1..5 {
+                    let mut i = 0; 
+                    loop {
+                        i += 1;
                         if car.y + length + i < 6
                             && self.array[(car.y + length + i) as usize][car.x as usize] == b'.'
                         {
